@@ -121,9 +121,8 @@ void IIHEModuleTrigger::analyze(const edm::Event& iEvent, const edm::EventSetup&
     
     // Then pass the trigger information to the trigger so that it can pick out the
     // results from the event.
-    hlt->status(iEvent, iSetup, hltConfig_, hltPrescaleProvider_.prescaleSet(iEvent,iSetup), HLTR, trigEvent, trigEventTag, analysis) ;
+    hlt->status(iEvent, iSetup, hltConfig_, hltPrescaleProvider_, HLTR, trigEvent, trigEventTag, analysis) ;
    
-cout<<hltPrescaleProvider_.prescaleSet(iEvent,iSetup); 
     // Finally store the information to the ntuple.
     hlt->store(analysis) ;
   }
@@ -139,11 +138,11 @@ void IIHEModuleTrigger::beginRun(edm::Run const& iRun, edm::EventSetup const& iS
   // case we ever try to save information to ntuple before we've set this flag.)
   bool changed = true ;
 
-
-  hltPrescaleProvider_.init(iRun, iSetup, hlTriggerResultsTag_.process(), changed);
+ edm::InputTag trigEventTag("hltTriggerSummaryAOD","","HLT") ;
+  hltPrescaleProvider_.init(iRun, iSetup, trigEventTag.process(), changed);
   
   // First check to see that we can initialise the hltconfig...
-  if(hltConfig_.init(iRun, iSetup, hlTriggerResultsTag_.process(), changed)){
+  if(hltConfig_.init(iRun, iSetup, trigEventTag.process(), changed)){
     // ...and that we've noticed that things have changed...
     if(changed){
       // This is debug information.  It's very verbose, so I commented it out.

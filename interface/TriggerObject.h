@@ -117,7 +117,7 @@ public:
   bool  beginRun(HLTConfigProvider const&) ;
   
   int findIndex(HLTConfigProvider const&) ;
-  int status(const edm::Event&, edm::EventSetup const&, HLTConfigProvider const&,int , Handle<TriggerResults> const&, edm::Handle<trigger::TriggerEvent>, edm::InputTag, IIHEAnalysis*) ;
+  int status(const edm::Event&, edm::EventSetup const&, HLTConfigProvider const&, HLTPrescaleProvider&, Handle<TriggerResults> const&, edm::Handle<trigger::TriggerEvent>, edm::InputTag, IIHEAnalysis*) ;
   void store(IIHEAnalysis*) ;
   
   std::string name(){ return name_ ; }
