@@ -11,6 +11,7 @@ private:
   edm::EDGetTokenT<EcalRecHitCollection>        eeReducedRecHitCollection_;
   edm::EDGetTokenT<reco::TrackCollection>       generalTracksToken_;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_ ;
+  edm::EDGetTokenT<double> rhoTokenAll_; 
 public:
   explicit IIHEModuleGedGsfElectron(const edm::ParameterSet& iConfig, edm::ConsumesCollector && iC);
   explicit IIHEModuleGedGsfElectron(const edm::ParameterSet& iConfig): IIHEModule(iConfig){};

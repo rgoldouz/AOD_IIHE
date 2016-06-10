@@ -47,7 +47,7 @@ options.parseArguments()
 if options.DataProcessing == "mc":
   globalTag = '80X_mcRun2_asymptotic_2016_v3'
 if options.DataProcessing == "data":
-  globalTag = '80X_dataRun2_Prompt_v6'
+  globalTag = '80X_dataRun2_Prompt_v8'
 
 ##########################################################################################
 #                                  Start the sequences                                   #
@@ -64,7 +64,7 @@ process.GlobalTag.globaltag = globalTag
 print "Global Tag is ", process.GlobalTag.globaltag
 
 process.options = cms.untracked.PSet( SkipEvent = cms.untracked.vstring('ProductNotFound') )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.MessageLogger.cerr.FwkReport.reportEvery = 10000
@@ -82,8 +82,8 @@ process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring())
 
 #process.source.fileNames.append( path )
-process.source.fileNames.append( 'file:86F7E516-0E17-E611-BCAA-02163E0141B2.root' )
-#process.source.fileNames.append( 'file:ZToEE_NNPDF30_13TeV-powheg_M_2300_3500.root' )
+#process.source.fileNames.append( 'file:86F7E516-0E17-E611-BCAA-02163E0141B2.root' )
+process.source.fileNames.append( 'file:ZToEE_NNPDF30_13TeV-powheg_M_2300_3500.root' )
 ###
 if options.DataProcessing == "mc":
   filename_out = "file:/tmp/output_%s" % (options.sample + '_' + options.file)
@@ -97,6 +97,10 @@ process.TFileService = cms.Service("TFileService", fileName = cms.string(filenam
 ##########################################################################################
 #                                   IIHETree options                                     #
 ##########################################################################################
+from TrkIsoCorr.CorrectedElectronTrkisoProducers.CorrectedElectronTrkisoProducers_cfi import *
+process.CorrectedEle = CorrectedElectronTrkiso.clone()
+
+
 process.load("UserCode.IIHETree.IIHETree_cfi")
 # Set pt or mass thresholds for the truth module here
 # Setting thresholds reduces the size of the output files significantly
@@ -108,7 +112,7 @@ pt_threshold = 15
 # Only save some triggers.
 process.IIHEAnalysis.TriggerResults = cms.InputTag('TriggerResults', '', 'HLT')
 process.IIHEAnalysis.triggerEvent = cms.InputTag('selectedPatTrigger')
-triggers = 'singleElectron;doubleElectron'
+triggers = 'singleElectron;doubleElectron;singleMuon;singleElectronSingleMuon'
 process.IIHEAnalysis.triggers = cms.untracked.string(triggers)
 
 #process.IIHEAnalysis.triggers = cms.untracked.string('doubleElectron')
@@ -117,7 +121,8 @@ process.IIHEAnalysis.globalTag = cms.string(globalTag)
 
 # Collections.
 process.IIHEAnalysis.photonCollection    = cms.InputTag('photons'        )
-process.IIHEAnalysis.electronCollection  = cms.InputTag('gedGsfElectrons')
+#process.IIHEAnalysis.electronCollection  = cms.InputTag('gedGsfElectrons')
+process.IIHEAnalysis.electronCollection  = cms.InputTag('CorrectedEle')
 process.IIHEAnalysis.muonCollection      = cms.InputTag('muons'          )
 process.IIHEAnalysis.superClusterCollection = cms.InputTag('correctedHybridSuperClusters')
 process.IIHEAnalysis.reducedBarrelRecHitCollection = cms.InputTag('reducedEcalRecHitsEB')
@@ -179,7 +184,7 @@ process.IIHEAnalysis.includePhotonModule         = cms.untracked.bool(True)
 process.IIHEAnalysis.includeElectronModule       = cms.untracked.bool(True)
 process.IIHEAnalysis.includeMuonModule           = cms.untracked.bool(True)
 process.IIHEAnalysis.includeMETModule            = cms.untracked.bool(True)
-process.IIHEAnalysis.includeHEEPModule           = cms.untracked.bool(True)
+#process.IIHEAnalysis.includeHEEPModule           = cms.untracked.bool(True)
 process.IIHEAnalysis.includeZBosonModule         = cms.untracked.bool(True)
 process.IIHEAnalysis.includeSuperClusterModule   = cms.untracked.bool(False)
 process.IIHEAnalysis.includeTracksModule         = cms.untracked.bool(False)
@@ -195,4 +200,7 @@ process.IIHEAnalysis.debug = cms.bool(False)
 #                            Woohoo!  We're ready to start!                              #
 ##########################################################################################
 #process.p1 = cms.Path(process.kt6PFJetsForIsolation+process.IIHEAnalysis)
-process.p1 = cms.Path(process.IIHEAnalysis)
+process.p1 = cms.Path(
+    process.CorrectedEle  *
+    process.IIHEAnalysis 
+)

@@ -43,6 +43,7 @@ IIHEModuleGedGsfElectron::IIHEModuleGedGsfElectron(const edm::ParameterSet& iCon
   eeReducedRecHitCollection_ = iC.consumes<EcalRecHitCollection> (iConfig.getParameter<InputTag>("eeReducedRecHitCollection"));
   generalTracksToken_ = iC.consumes<reco::TrackCollection> (iConfig.getParameter<InputTag>("generalTracksLabel"));
   beamSpotToken_      = consumes<reco::BeamSpot>(iConfig.getParameter<InputTag>("beamSpot")) ;
+  rhoTokenAll_ = iC.consumes<double> (iConfig.getParameter<edm::InputTag>("eventRho"));
   ETThreshold_ = iConfig.getUntrackedParameter<double>("electrons_ETThreshold", 0.0 ) ;
 }
 IIHEModuleGedGsfElectron::~IIHEModuleGedGsfElectron(){}
@@ -73,7 +74,7 @@ void IIHEModuleGedGsfElectron::beginJob(){
   addBranch("gsf_hcalDepth1OverEcal") ;
   addBranch("gsf_hcalDepth2OverEcal") ;
   addBranch("gsf_dr03TkSumPt") ;
-  addBranch("gsf_dr03TkSumPtCorrected") ;
+//  addBranch("gsf_dr03TkSumPtCorrected") ;
   addBranch("gsf_dr03EcalRecHitSumEt") ;
   addBranch("gsf_dr03HcalDepth1TowerSumEt") ;
   addBranch("gsf_dr03HcalDepth2TowerSumEt") ;
@@ -179,6 +180,10 @@ void IIHEModuleGedGsfElectron::beginJob(){
   addBranch("gsf_sc_lazyTools_eseffsirir") ;
   addBranch("gsf_sc_lazyTools_BasicClusterSeedTime") ;
 
+
+  setBranchType(kVectorBool) ;
+  addBranch("gsf_isHeepV60");
+
 }
 
 // ------------ method called to for each event  ------------
@@ -194,11 +199,6 @@ void IIHEModuleGedGsfElectron::analyze(const edm::Event& iEvent, const edm::Even
   const EcalRecHitCollection* theBarrelEcalRecHits = EBHits.product () ;
   const EcalRecHitCollection* theEndcapEcalRecHits = EEHits.product () ;
 
-  //this part is added to remove bad tracks from trackiso
-  Handle<TrackCollection> generalTracksHandle;
-  iEvent.getByToken(generalTracksToken_,generalTracksHandle);
-  const reco::TrackCollection * TrackCollection = generalTracksHandle.product();
-  std::vector<int> algosToReject_ = {reco::TrackBase::jetCoreRegionalStep};
 
   edm::Handle<reco::BeamSpot> beamspotHandle_ ;
   iEvent.getByToken(beamSpotToken_, beamspotHandle_) ;
@@ -214,6 +214,10 @@ void IIHEModuleGedGsfElectron::analyze(const edm::Event& iEvent, const edm::Even
   math::XYZPoint* firstpvertex = parent_->getFirstPrimaryVertex() ;
   float pv_z = firstpvertex->z() ; 
   EcalClusterLazyTools lazytool(iEvent, iSetup, parent_->getReducedBarrelRecHitCollectionToken(), parent_->getReducedEndcapRecHitCollectionToken(), parent_->getReducedESRecHitCollectionToken()) ;
+
+  edm::Handle<double> rhoHandle ;
+  iEvent.getByToken(rhoTokenAll_, rhoHandle) ;
+  double rho = *rhoHandle ;
  
   unsigned int gsf_n = 0 ;
   for(vector<reco::GsfElectron>::const_iterator gsfiter=electrons.begin() ; gsfiter!=electrons.end() ; ++gsfiter){
@@ -395,25 +399,34 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
       store("gsf_mc_bestDR", 999.0) ;
       store("gsf_mc_index" ,    -1) ;
       store("gsf_mc_ERatio", 999.0) ;
+
+    bool isHeep = false;
+    //Barrel
+    if ( ET > 35  && abs(gsfiter->superCluster()->eta()) < 1.4442  &&
+      gsfiter->ecalDrivenSeed()                                            &&
+      gsfiter->deltaEtaSuperClusterTrackAtVtx() < 0.004                    &&
+      gsfiter->deltaPhiSuperClusterTrackAtVtx() < 0.06                     &&
+      gsfiter->hadronicOverEm() < 0.05 + 1/ gsfiter->caloEnergy()          &&
+      (gsfiter->full5x5_e1x5()/gsfiter->full5x5_e5x5() > 0.83 || gsfiter->full5x5_e2x5Max()/gsfiter->full5x5_e5x5() > 0.94) &&
+      gsf_nLostInnerHits < 2                                               &&
+      gsfiter->gsfTrack()->dxy(*firstpvertex) < 0.02                       &&
+      gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2 + 0.03 * ET + 0.28 * rho   && 
+      gsfiter->dr03TkSumPt() < 5) isHeep = true;
+    //endcap
+    if ( ET > 35  && (abs(gsfiter->superCluster()->eta()) > 1.4442  || (abs(gsfiter->superCluster()->eta()) < 2.5) )&&
+      gsfiter->ecalDrivenSeed()                                            &&
+      gsfiter->deltaEtaSuperClusterTrackAtVtx() < 0.006                    &&
+      gsfiter->deltaPhiSuperClusterTrackAtVtx() < 0.06                     &&
+      gsfiter->hadronicOverEm() < 0.05 + 5/ gsfiter->caloEnergy()          &&
+      gsfiter->sigmaIetaIeta() <0.03                                         &&
+      gsf_nLostInnerHits < 2                                               &&
+      gsfiter->gsfTrack()->dxy(*firstpvertex) < 0.05                       &&
+      (( ET < 50 && gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2.5 + 0.03 + 0.28 * rho) || 
+      ( ET > 50 && gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2.5 + 0.03 * (ET-50) + 0.28 * rho)) &&
+      gsfiter->dr03TkSumPt() < 5) isHeep = true;
+
+    store("gsf_isHeepV60", isHeep);
     }
-
-  double correctedtkiso = gsfiter->dr03TkSumPt();
-  // trackiso variable is corrected (see https://github.com/cms-sw/cmssw/blob/CMSSW_8_1_X/RecoEgamma/EgammaIsolationAlgos/src/ElectronTkIsolation.cc)
-  if (sc_et> 90){
-    for ( reco::TrackCollection::const_iterator itrTr  = TrackCollection->begin() ; 	itrTr != TrackCollection->end(); 	++itrTr ) {    
-      if (!(std::binary_search(algosToReject_.begin(),algosToReject_.end(),itrTr->algo()))) continue;
-      if (itrTr->pt()<0.7) continue;
-      double dzCut = fabs (itrTr->vz() - gsfiter->gsfTrack()->vz());
-      if (dzCut > 0.2 ) continue;
-      if (fabs(itrTr->dxy(beamspotHandle_->position()) ) > 999999999 ) continue; 
-      double dr = ROOT::Math::VectorUtil::DeltaR(itrTr->momentum(),gsfiter->gsfTrack()->momentum ()) ;
-      double deta = itrTr->eta() - gsfiter->gsfTrack()->eta();
-      //parameters are taken from http://cmslxr.fnal.gov/source/RecoEgamma/EgammaElectronProducers/python/gedGsfElectrons_cfi.py#0119
-      if(dr < 0.3 && dr>=0.015 && std::abs(deta) >=0.015 ) correctedtkiso -= itrTr->pt();
-   } 
-  }
-
-  store("gsf_dr03TkSumPtCorrected", correctedtkiso) ;
  }
   store("gsf_n", gsf_n) ;
 }
