@@ -74,7 +74,7 @@ void IIHEModuleGedGsfElectron::beginJob(){
   addBranch("gsf_hcalDepth1OverEcal") ;
   addBranch("gsf_hcalDepth2OverEcal") ;
   addBranch("gsf_dr03TkSumPt") ;
-//  addBranch("gsf_dr03TkSumPtCorrected") ;
+  addBranch("gsf_dr03TkSumPtCorrected") ;
   addBranch("gsf_dr03EcalRecHitSumEt") ;
   addBranch("gsf_dr03HcalDepth1TowerSumEt") ;
   addBranch("gsf_dr03HcalDepth2TowerSumEt") ;
@@ -260,6 +260,7 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
     store("gsf_hcalDepth2OverEcal"            , gsfiter->hcalDepth2OverEcal()            ) ;
     store("gsf_dr03TkSumPt"                   , gsfiter->dr03TkSumPt()                   ) ;
     store("gsf_dr03EcalRecHitSumEt"           , gsfiter->dr03EcalRecHitSumEt()           ) ;
+    store("gsf_dr03TkSumPtCorrected"           , gsfiter->dr03EcalRecHitSumEt()           ) ;
     store("gsf_dr03HcalDepth1TowerSumEt"      , gsfiter->dr03HcalDepth1TowerSumEt()      ) ;
     store("gsf_dr03HcalDepth2TowerSumEt"      , gsfiter->dr03HcalDepth2TowerSumEt()      ) ;
     store("gsf_charge"                        , gsfiter->charge()                        ) ;
