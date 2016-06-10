@@ -112,7 +112,7 @@ pt_threshold = 15
 # Only save some triggers.
 process.IIHEAnalysis.TriggerResults = cms.InputTag('TriggerResults', '', 'HLT')
 process.IIHEAnalysis.triggerEvent = cms.InputTag('selectedPatTrigger')
-triggers = 'singleElectron;doubleElectron;singleMuon;singleElectronSingleMuon'
+triggers = 'singleElectron;doubleElectron;singleMuon'
 process.IIHEAnalysis.triggers = cms.untracked.string(triggers)
 
 #process.IIHEAnalysis.triggers = cms.untracked.string('doubleElectron')
@@ -184,7 +184,7 @@ process.IIHEAnalysis.includePhotonModule         = cms.untracked.bool(True)
 process.IIHEAnalysis.includeElectronModule       = cms.untracked.bool(True)
 process.IIHEAnalysis.includeMuonModule           = cms.untracked.bool(True)
 process.IIHEAnalysis.includeMETModule            = cms.untracked.bool(True)
-#process.IIHEAnalysis.includeHEEPModule           = cms.untracked.bool(True)
+process.IIHEAnalysis.includeHEEPModule           = cms.untracked.bool(False)
 process.IIHEAnalysis.includeZBosonModule         = cms.untracked.bool(True)
 process.IIHEAnalysis.includeSuperClusterModule   = cms.untracked.bool(False)
 process.IIHEAnalysis.includeTracksModule         = cms.untracked.bool(False)
