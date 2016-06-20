@@ -259,8 +259,8 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
     store("gsf_hcalDepth1OverEcal"            , gsfiter->hcalDepth1OverEcal()            ) ;
     store("gsf_hcalDepth2OverEcal"            , gsfiter->hcalDepth2OverEcal()            ) ;
     store("gsf_dr03TkSumPt"                   , gsfiter->dr03TkSumPt()                   ) ;
+    store("gsf_dr03TkSumPtCorrected"           , gsfiter->dr03TkSumPt()           ) ;
     store("gsf_dr03EcalRecHitSumEt"           , gsfiter->dr03EcalRecHitSumEt()           ) ;
-    store("gsf_dr03TkSumPtCorrected"           , gsfiter->dr03EcalRecHitSumEt()           ) ;
     store("gsf_dr03HcalDepth1TowerSumEt"      , gsfiter->dr03HcalDepth1TowerSumEt()      ) ;
     store("gsf_dr03HcalDepth2TowerSumEt"      , gsfiter->dr03HcalDepth2TowerSumEt()      ) ;
     store("gsf_charge"                        , gsfiter->charge()                        ) ;
