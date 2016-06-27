@@ -184,6 +184,37 @@ void IIHEModuleGedGsfElectron::beginJob(){
   setBranchType(kVectorBool) ;
   addBranch("gsf_isHeepV60");
 
+
+  // Saturation information
+  addBranch("EHits_isSaturated", kBool) ;
+  setBranchType(kVectorInt) ;
+  addBranch("EBHits_rawId"   ) ;
+  addBranch("EBHits_iRechit" ) ;
+  addBranch("EBHits_energy", kVectorFloat) ;
+  addBranch("EBHits_ieta"    ) ;
+  addBranch("EBHits_iphi"    ) ;
+  addBranch("EBHits_RecoFlag") ;
+
+  setBranchType(kVectorBool) ;
+  addBranch("EBHits_kSaturated"           ) ;
+  addBranch("EBHits_kLeadingEdgeRecovered") ;
+  addBranch("EBHits_kNeighboursRecovered" ) ;
+  addBranch("EBHits_kWeird"               ) ;
+
+  setBranchType(kVectorInt) ;
+  addBranch("EEHits_rawId"   ) ;
+  addBranch("EEHits_iRechit" ) ;
+  addBranch("EEHits_energy", kVectorFloat) ;
+  addBranch("EEHits_ieta"    ) ;
+  addBranch("EEHits_iphi"    ) ;
+  addBranch("EEHits_RecoFlag") ;
+
+  setBranchType(kVectorBool) ;
+  addBranch("EEHits_kSaturated"           ) ;
+  addBranch("EEHits_kLeadingEdgeRecovered") ;
+  addBranch("EEHits_kNeighboursRecovered" ) ;
+  addBranch("EEHits_kWeird"               ) ;
+
 }
 
 // ------------ method called to for each event  ------------
@@ -430,6 +461,49 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
     }
  }
   store("gsf_n", gsf_n) ;
+
+
+  int nEBRecHits = 0 ;
+  bool isSaturated = false;
+  for(EcalRecHitCollection::const_iterator EBIt = theBarrelEcalRecHits->begin() ; EBIt!=theBarrelEcalRecHits->end() ; ++EBIt){
+    if((*EBIt).checkFlag(EcalRecHit::kSaturated)) isSaturated = true;
+    if( (*EBIt).energy() < 200.0 ) continue ;
+    nEBRecHits++ ;
+    EBDetId elementId = EBIt->id() ;
+    store("EBHits_rawId"   , elementId.rawId()) ;
+    store("EBHits_iRechit" , nEBRecHits) ;
+    store("EBHits_energy"  , (*EBIt).energy() ) ;
+    store("EBHits_ieta"    , elementId.ieta() ) ;
+    store("EBHits_iphi"    , elementId.iphi() ) ;
+    store("EBHits_RecoFlag", (*EBIt).recoFlag() ) ;
+
+    store("EBHits_kSaturated"           , (*EBIt).checkFlag(EcalRecHit::kSaturated           )) ;
+    store("EBHits_kLeadingEdgeRecovered", (*EBIt).checkFlag(EcalRecHit::kLeadingEdgeRecovered)) ;
+    store("EBHits_kNeighboursRecovered" , (*EBIt).checkFlag(EcalRecHit::kNeighboursRecovered )) ;
+    store("EBHits_kWeird"               , (*EBIt).checkFlag(EcalRecHit::kWeird               )) ;
+  }
+
+
+  int nEERecHits = 0 ;
+  for(EcalRecHitCollection::const_iterator EEIt = theEndcapEcalRecHits->begin() ; EEIt!=theEndcapEcalRecHits->end() ; ++EEIt){
+    if((*EEIt).checkFlag(EcalRecHit::kSaturated)) isSaturated = true;
+    if( (*EEIt).energy() < 200.0 ) continue ;
+    nEERecHits++ ;
+    EBDetId elementId = EEIt->id() ;
+    store("EEHits_rawId"   , elementId.rawId()) ;
+    store("EEHits_iRechit" , nEBRecHits) ;
+    store("EEHits_energy"  , (*EEIt).energy() ) ;
+    store("EEHits_ieta"    , elementId.ieta() ) ;
+    store("EEHits_iphi"    , elementId.iphi() ) ;
+    store("EEHits_RecoFlag", (*EEIt).recoFlag() ) ;
+
+    store("EEHits_kSaturated"           , (*EEIt).checkFlag(EcalRecHit::kSaturated           )) ;
+    store("EEHits_kLeadingEdgeRecovered", (*EEIt).checkFlag(EcalRecHit::kLeadingEdgeRecovered)) ;
+    store("EEHits_kNeighboursRecovered" , (*EEIt).checkFlag(EcalRecHit::kNeighboursRecovered )) ;
+    store("EEHits_kWeird"               , (*EEIt).checkFlag(EcalRecHit::kWeird               )) ;
+  }
+  store("EHits_isSaturated", isSaturated);
+
 }
 
 void IIHEModuleGedGsfElectron::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup){}
