@@ -431,7 +431,7 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
       store("gsf_mc_bestDR", 999.0) ;
       store("gsf_mc_index" ,    -1) ;
       store("gsf_mc_ERatio", 999.0) ;
-
+    }
     bool isHeep = false;
     //Barrel
     if ( ET > 35  && abs(gsfiter->superCluster()->eta()) < 1.4442  &&
@@ -458,7 +458,6 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
       gsfiter->dr03TkSumPt() < 5) isHeep = true;
 
     store("gsf_isHeepV60", isHeep);
-    }
  }
   store("gsf_n", gsf_n) ;
 
