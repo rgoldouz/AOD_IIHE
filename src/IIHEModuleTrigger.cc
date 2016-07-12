@@ -104,6 +104,11 @@ int IIHEModuleTrigger::addBranches(){
 
 // ------------ method called to for each event  ------------
 void IIHEModuleTrigger::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
+
+
+
+
+
   // Declare some variables to hold the trigger information.
   edm::Handle<trigger::TriggerEvent> trigEvent ;
   iEvent.getByToken(trigEvent_,trigEvent) ;
@@ -111,18 +116,15 @@ void IIHEModuleTrigger::analyze(const edm::Event& iEvent, const edm::EventSetup&
   // Get hold of TriggerResults, using the normal getByLabel method.
  edm::Handle<TriggerResults> HLTR ;
  iEvent.getByToken(triggerBits_, HLTR) ;
-
  edm::InputTag trigEventTag("hltTriggerSummaryAOD","","HLT") ;  
   // Now fill the values.
   IIHEAnalysis* analysis = parent_ ;
   for(unsigned int i=0 ; i<HLTriggers_.size() ; i++){
     // Here we loop over the triggers one by one.
     HLTrigger* hlt = HLTriggers_.at(i) ;
-    
     // Then pass the trigger information to the trigger so that it can pick out the
     // results from the event.
     hlt->status(iEvent, iSetup, hltConfig_, hltPrescaleProvider_, HLTR, trigEvent, trigEventTag, analysis) ;
-   
     // Finally store the information to the ntuple.
     hlt->store(analysis) ;
   }

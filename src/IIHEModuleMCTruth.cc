@@ -21,6 +21,27 @@ IIHEModuleMCTruth::~IIHEModuleMCTruth(){}
 
 // ------------ method called once each job just before starting event loop  ------------
 void IIHEModuleMCTruth::beginJob(){
+ std::vector<int> MCPdgIdsToSave ;
+  MCPdgIdsToSave.push_back(11) ; // Electron
+  MCPdgIdsToSave.push_back(13) ; // Muon
+  MCPdgIdsToSave.push_back(15) ; // Tau
+  MCPdgIdsToSave.push_back(21) ; // gluon
+  MCPdgIdsToSave.push_back( 1) ; // d quark
+  MCPdgIdsToSave.push_back( 2) ; // u quark
+  MCPdgIdsToSave.push_back( 3) ; // s quark
+  MCPdgIdsToSave.push_back( 4) ; // c quark
+  MCPdgIdsToSave.push_back( 5) ; // b quark
+  MCPdgIdsToSave.push_back( 6) ; // t quark
+  MCPdgIdsToSave.push_back(22) ; // Photon
+  MCPdgIdsToSave.push_back(23) ; // Z boson
+  MCPdgIdsToSave.push_back(24) ; // W boson
+  MCPdgIdsToSave.push_back(25) ; // BEH boson
+  MCPdgIdsToSave.push_back(32) ; // Z'  boson
+  MCPdgIdsToSave.push_back(33) ; // Z'' boson
+  MCPdgIdsToSave.push_back(34) ; // W'  boson
+  addToMCTruthWhitelist(MCPdgIdsToSave) ;
+
+
   addBranch("mc_n", kUInt) ;
   addBranch("mc_weight", kFloat) ;
   addBranch("mc_w_sign", kFloat) ;
@@ -118,7 +139,6 @@ void IIHEModuleMCTruth::analyze(const edm::Event& iEvent, const edm::EventSetup&
   for(GenParticleCollection::const_iterator mc_iter = genParticles.begin() ; mc_iter!=genParticles.end() ; ++mc_iter){
     int pdgId = mc_iter->pdgId() ;
     float pt  = mc_iter->pt()    ;
-    
     // First check the whitelist.
     bool whitelist_accept = false ;
     for(unsigned int i=0 ; i<whitelist_.size() ; ++i){
@@ -143,7 +163,6 @@ void IIHEModuleMCTruth::analyze(const edm::Event& iEvent, const edm::EventSetup&
     // Now combine them all.
     bool accept = (whitelist_accept && daughters_accept && thresholds_accept && nonZeroPt_accept) ;
     if(false==accept) continue ;
-    
     // Now go up the ancestry until we find the real parent
     const Candidate* parent = mc_iter->mother() ;
     const Candidate* child  = mc_iter->clone()  ;

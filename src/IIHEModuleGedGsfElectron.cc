@@ -59,6 +59,13 @@ void IIHEModuleGedGsfElectron::beginJob(){
   addBranch("gsf_scE1x5") ;
   addBranch("gsf_scE5x5") ;
   addBranch("gsf_scE2x5Max") ;
+
+  addBranch("gsf_full5x5_e5x5") ;
+  addBranch("gsf_full5x5_e1x5") ;
+  addBranch("gsf_full5x5_e2x5Max") ;
+  addBranch("gsf_full5x5_sigmaIetaIeta");
+  addBranch("gsf_full5x5_hcalOverEcal");
+
   addBranch("gsf_eta") ;
   addBranch("gsf_phi") ;
   addBranch("gsf_theta") ;
@@ -133,6 +140,7 @@ void IIHEModuleGedGsfElectron::beginJob(){
 
   setBranchType(kVectorFloat) ;
   addBranch("gsf_sc_energy") ;
+  addBranch("gsf_sc_seed_eta") ;
   addBranch("gsf_sc_eta") ;
   addBranch("gsf_sc_etacorr") ;
   addBranch("gsf_sc_theta") ;
@@ -328,6 +336,12 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
     store("gsf_deltaPhiSeedClusterTrackAtCalo", gsfiter->deltaPhiSeedClusterTrackAtCalo()) ;
     store("gsf_deltaEtaSeedClusterTrackAtCalo", gsfiter->deltaEtaSeedClusterTrackAtCalo()) ;
     store("gsf_deltaEtaSeedClusterTrackAtVtx" , gsfiter->deltaEtaSeedClusterTrackAtVtx() ) ;
+    store("gsf_full5x5_e5x5"                  ,gsfiter->full5x5_e5x5()) ;
+    store("gsf_full5x5_e1x5"                  ,gsfiter->full5x5_e1x5()) ;
+    store("gsf_full5x5_e2x5Max"               ,gsfiter->full5x5_e2x5Max()) ;
+    store("gsf_full5x5_sigmaIetaIeta"         ,gsfiter->full5x5_sigmaIetaIeta()) ;
+
+    store("gsf_full5x5_hcalOverEcal"         ,gsfiter->full5x5_hcalOverEcal());
 
     float sc_energy = gsfiter->superCluster()->rawEnergy()+gsfiter->superCluster()->preshowerEnergy() ;
     float sc_et     = sc_energy*sin(2.*atan(exp(-1.*gsfiter->superCluster()->eta()))) ;
@@ -348,6 +362,7 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
     store("gsf_sc_z"          , gsfiter->superCluster()->position().z()           ) ;
     store("gsf_sc_phiWidth"   , gsfiter->superCluster()->phiWidth()               ) ;
     store("gsf_sc_etaWidth"   , gsfiter->superCluster()->etaWidth()               ) ;
+    store("gsf_sc_seed_eta"   ,gsfiter->superCluster()->seed()->eta()             ) ;
 
     store("gsf_sc_seed_rawId" , gsfiter->superCluster()->seed()->seed().rawId()   );
 
@@ -436,9 +451,9 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
     //Barrel
     if ( ET > 35  && abs(gsfiter->superCluster()->eta()) < 1.4442  &&
       gsfiter->ecalDrivenSeed()                                            &&
-      gsfiter->deltaEtaSuperClusterTrackAtVtx() < 0.004                    &&
+      gsfiter->deltaEtaSeedClusterTrackAtVtx() < 0.004                    &&
       gsfiter->deltaPhiSuperClusterTrackAtVtx() < 0.06                     &&
-      gsfiter->hadronicOverEm() < 0.05 + 1/ gsfiter->caloEnergy()          &&
+      gsfiter->hadronicOverEm() < 0.05 + 1/ sc_energy          &&
       (gsfiter->full5x5_e1x5()/gsfiter->full5x5_e5x5() > 0.83 || gsfiter->full5x5_e2x5Max()/gsfiter->full5x5_e5x5() > 0.94) &&
       gsf_nLostInnerHits < 2                                               &&
       gsfiter->gsfTrack()->dxy(*firstpvertex) < 0.02                       &&
@@ -447,10 +462,10 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
     //endcap
     if ( ET > 35  && (abs(gsfiter->superCluster()->eta()) > 1.4442  || (abs(gsfiter->superCluster()->eta()) < 2.5) )&&
       gsfiter->ecalDrivenSeed()                                            &&
-      gsfiter->deltaEtaSuperClusterTrackAtVtx() < 0.006                    &&
+      gsfiter->deltaEtaSeedClusterTrackAtVtx() < 0.006                    &&
       gsfiter->deltaPhiSuperClusterTrackAtVtx() < 0.06                     &&
-      gsfiter->hadronicOverEm() < 0.05 + 5/ gsfiter->caloEnergy()          &&
-      gsfiter->sigmaIetaIeta() <0.03                                         &&
+      gsfiter->hadronicOverEm() < 0.05 + 5/ sc_energy          &&
+      gsfiter->full5x5_sigmaIetaIeta() <0.03                                         &&
       gsf_nLostInnerHits < 2                                               &&
       gsfiter->gsfTrack()->dxy(*firstpvertex) < 0.05                       &&
       (( ET < 50 && gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2.5 + 0.03 + 0.28 * rho) || 

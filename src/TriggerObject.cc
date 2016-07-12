@@ -302,7 +302,8 @@ int HLTrigger::status(const edm::Event& iEvent, const edm::EventSetup & iSetup, 
     
     // Now get the variables we care about.
     accept_   = triggerResults->accept(index_) ;
-    prescale_ = Prescale.prescaleValue (iEvent,iSetup,name_);
+    prescale_ = 1;
+//Prescale.prescaleValue (iEvent,iSetup,name_);
 //    prescale_ = hltConfig.prescaleValue(hltPrescale.prescaleSet(iEvent,iSetup), name_);
  
     // And finally loop over the filters.
