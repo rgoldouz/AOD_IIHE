@@ -343,7 +343,8 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
 
     store("gsf_full5x5_hcalOverEcal"         ,gsfiter->full5x5_hcalOverEcal());
 
-    float sc_energy = gsfiter->superCluster()->rawEnergy()+gsfiter->superCluster()->preshowerEnergy() ;
+//    float sc_energy = gsfiter->superCluster()->rawEnergy()+gsfiter->superCluster()->preshowerEnergy() ;
+    float sc_energy = gsfiter->superCluster()->energy();
     float sc_et     = sc_energy*sin(2.*atan(exp(-1.*gsfiter->superCluster()->eta()))) ;
     float etaCorr = etacorr( gsfiter->superCluster()->eta(), pv_z, gsfiter->superCluster()->position().z()) ;
 
@@ -449,26 +450,26 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
 
     bool isHeep = false;
     //Barrel
-    if ( ET > 35  && abs(gsfiter->superCluster()->eta()) < 1.4442  &&
+    if ( ET > 35  && fabs(gsfiter->superCluster()->eta()) < 1.4442  &&
       gsfiter->ecalDrivenSeed()                                            &&
-      gsfiter->deltaEtaSeedClusterTrackAtVtx() < 0.004                    &&
-      gsfiter->deltaPhiSuperClusterTrackAtVtx() < 0.06                     &&
+      fabs(gsfiter->deltaEtaSeedClusterTrackAtVtx()) < 0.004                    &&
+      fabs(gsfiter->deltaPhiSuperClusterTrackAtVtx()) < 0.06                     &&
       gsfiter->hadronicOverEm() < 0.05 + 1/ sc_energy          &&
       (gsfiter->full5x5_e1x5()/gsfiter->full5x5_e5x5() > 0.83 || gsfiter->full5x5_e2x5Max()/gsfiter->full5x5_e5x5() > 0.94) &&
       gsf_nLostInnerHits < 2                                               &&
-      gsfiter->gsfTrack()->dxy(*firstpvertex) < 0.02                       &&
+      fabs(gsfiter->gsfTrack()->dxy(*firstpvertex)) < 0.02                       &&
       gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2 + 0.03 * ET + 0.28 * rho   && 
       gsfiter->dr03TkSumPt() < 5) isHeep = true;
     //endcap
-    if ( ET > 35  && (abs(gsfiter->superCluster()->eta()) > 1.4442  || (abs(gsfiter->superCluster()->eta()) < 2.5) )&&
+    if ( ET > 35  && (fabs(gsfiter->superCluster()->eta()) > 1.566  || (abs(gsfiter->superCluster()->eta()) < 2.5) )&&
       gsfiter->ecalDrivenSeed()                                            &&
-      gsfiter->deltaEtaSeedClusterTrackAtVtx() < 0.006                    &&
-      gsfiter->deltaPhiSuperClusterTrackAtVtx() < 0.06                     &&
+      fabs(gsfiter->deltaEtaSeedClusterTrackAtVtx()) < 0.006                    &&
+      fabs(gsfiter->deltaPhiSuperClusterTrackAtVtx()) < 0.06                     &&
       gsfiter->hadronicOverEm() < 0.05 + 5/ sc_energy          &&
       gsfiter->full5x5_sigmaIetaIeta() <0.03                                         &&
       gsf_nLostInnerHits < 2                                               &&
-      gsfiter->gsfTrack()->dxy(*firstpvertex) < 0.05                       &&
-      (( ET < 50 && gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2.5 + 0.03 + 0.28 * rho) || 
+      fabs(gsfiter->gsfTrack()->dxy(*firstpvertex)) < 0.05                       &&
+      (( ET < 50 && gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2.5 + 0.28 * rho) || 
       ( ET > 50 && gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2.5 + 0.03 * (ET-50) + 0.28 * rho)) &&
       gsfiter->dr03TkSumPt() < 5) isHeep = true;
 
