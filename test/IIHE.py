@@ -82,8 +82,9 @@ process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring())
 
 #process.source.fileNames.append( path )
-#process.source.fileNames.append( 'file:86F7E516-0E17-E611-BCAA-02163E0141B2.root' )
-process.source.fileNames.append( 'file:ZToEE_NNPDF30_13TeV-powheg_M_2300_3500.root' )
+process.source.fileNames.append( 'file:86F7E516-0E17-E611-BCAA-02163E0141B2.root' )
+#process.source.fileNames.append( 'file:ZToEE_NNPDF30_13TeV-powheg_M_2300_3500.root' )
+#process.source.fileNames.append( 'file:ZToEE_NNPDF30_13TeV-powheg_M_120_200_PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1_S2EGHEIssue_11.root')
 ###
 if options.DataProcessing == "mc":
   filename_out = "file:/tmp/output_%s" % (options.sample + '_' + options.file)

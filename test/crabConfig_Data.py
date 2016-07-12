@@ -3,8 +3,8 @@ config = config()
 
 #General section: In this section, the user specifies generic parameters about the request (e.g. request name). 
 #config.section_('General')
-config.General.requestName = 'DoubleEG_Run2016B-PromptReco-v1_AOD'
-#config.General.requestName ='SingleElectron_Run2016B-PromptReco-v1_AOD'
+#config.General.requestName = 'DoubleEG_Run2016B-PromptReco-v2_AOD'
+config.General.requestName ='SingleElectron_Run2016B-PromptReco-v2_AOD'
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
 config.General.transferLogs = False
@@ -17,14 +17,14 @@ config.JobType.psetName = 'IIHE.py'
 
 #Data section: This section contains all the parameters related to the data to be analyzed, including the splitting parameters. 
 #config.section_('Data')
-config.Data.inputDataset = '/DoubleEG/Run2016B-PromptReco-v1/AOD'
-#config.Data.inputDataset = '/SingleElectron/Run2016B-PromptReco-v1/AOD'
+#config.Data.inputDataset = '/DoubleEG/Run2016B-PromptReco-v2/AOD'
+config.Data.inputDataset = '/SingleElectron/Run2016B-PromptReco-v2/AOD'
 config.Data.inputDBS = 'global'
 config.Data.splitting = 'LumiBased'
-config.Data.unitsPerJob = 30
+config.Data.unitsPerJob = 20
 config.Data.ignoreLocality = True
-#config.Data.lumiMask = 'https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions12/8TeV/Prompt/Cert_190456-208686_8TeV_PromptReco_Collisions12_JSON.txt'
-#config.Data.runRange = '193093-193999' # '193093-194075'
+#config.Data.lumiMask = 'Json_totalRuns_160626_2.txt'
+config.Data.runRange = '271184-276384' # '193093-194075'
 #config.Data.outLFNDirBase = '/store/user/%s/' % (getUsernameFromSiteDB())
 #config.Data.publication = True
 #config.Data.outputDatasetTag = 'CRAB3_tutorial_May2015_Data_analysis'
