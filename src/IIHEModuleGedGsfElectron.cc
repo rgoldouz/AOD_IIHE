@@ -261,7 +261,7 @@ void IIHEModuleGedGsfElectron::analyze(const edm::Event& iEvent, const edm::Even
   unsigned int gsf_n = 0 ;
   for(vector<reco::GsfElectron>::const_iterator gsfiter=electrons.begin() ; gsfiter!=electrons.end() ; ++gsfiter){
     
-    float ET = gsfiter->caloEnergy()*sin(gsfiter->p4().theta()) ;
+    float ET = gsfiter->caloEnergy()*sin(2.*atan(exp(-1.*gsfiter->superCluster()->eta()))) ;
     if(ET<ETThreshold_ && gsfiter->pt()<ETThreshold_) continue ;
     gsf_n++ ;
     
