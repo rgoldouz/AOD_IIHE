@@ -16,11 +16,12 @@
 using namespace std ;
 using namespace reco;
 using namespace edm ;
-IIHEModuleTrigger::IIHEModuleTrigger(const edm::ParameterSet& iConfig):IIHEModule(iConfig),
-hltPrescaleProvider_(iConfig, consumesCollector(), *this){}
+IIHEModuleTrigger::IIHEModuleTrigger(const edm::ParameterSet& iConfig):IIHEModule(iConfig)
+//,hltPrescaleProvider_(iConfig, consumesCollector(), *this)
+{}
 
-IIHEModuleTrigger::IIHEModuleTrigger(const edm::ParameterSet& iConfig, edm::ConsumesCollector && iC): IIHEModule(iConfig),
- hltPrescaleProvider_(iConfig, consumesCollector(), *this) 
+IIHEModuleTrigger::IIHEModuleTrigger(const edm::ParameterSet& iConfig, edm::ConsumesCollector && iC): IIHEModule(iConfig)
+//,hltPrescaleProvider_(iConfig, iC, *this) 
 {
 //  hlTriggerResultsTag_ = iConfig.getParameter<edm::InputTag>("hltTriggerSummaryAOD","","HLT") ;
   nEvents_ = 0 ;
@@ -55,6 +56,7 @@ IIHEModuleTrigger::IIHEModuleTrigger(const edm::ParameterSet& iConfig, edm::Cons
   includeSingleElectronSingleMuonTriggers_ = (triggersIn.find("singleElectronSingleMuon")!=std::string::npos) ;
   includeSingleElectronDoubleMuonTriggers_ = (triggersIn.find("singleElectronDoubleMuon")!=std::string::npos) ;
   includeDoubleElectronSingleMuonTriggers_ = (triggersIn.find("doubleElectronSingleMuon")!=std::string::npos) ;
+  includeSinglePhotonTriggers_     = (triggersIn.find("singlePhoton"    )!=std::string::npos) ;
   
   // Then tell the user which topologies we will save.
   std::cout << "Including single electron triggers: " << includeSingleElectronTriggers_ << std::endl ;
@@ -66,7 +68,7 @@ IIHEModuleTrigger::IIHEModuleTrigger(const edm::ParameterSet& iConfig, edm::Cons
   std::cout << "Including single electron single muon triggers: " << includeSingleElectronSingleMuonTriggers_ << std::endl ;
   std::cout << "Including single electron double muon triggers: " << includeSingleElectronDoubleMuonTriggers_ << std::endl ;
   std::cout << "Including double electron single muon triggers: " << includeDoubleElectronSingleMuonTriggers_ << std::endl ;
-  
+  std::cout << "Including single photon triggers:     " << includeSinglePhotonTriggers_     << std::endl ; 
   // At this point we have loaded all the information about the triggers we want to save.
   // Note that it's much safer to save topologies instead of individual triggers,
   // because trigger names change in data with little or no warning!
@@ -124,7 +126,7 @@ void IIHEModuleTrigger::analyze(const edm::Event& iEvent, const edm::EventSetup&
     HLTrigger* hlt = HLTriggers_.at(i) ;
     // Then pass the trigger information to the trigger so that it can pick out the
     // results from the event.
-    hlt->status(iEvent, iSetup, hltConfig_, hltPrescaleProvider_, HLTR, trigEvent, trigEventTag, analysis) ;
+    hlt->status(iEvent, iSetup, hltConfig_, parent_->getPreScaleIndex(), HLTR, trigEvent, trigEventTag, analysis) ;
     // Finally store the information to the ntuple.
     hlt->store(analysis) ;
   }
@@ -141,7 +143,7 @@ void IIHEModuleTrigger::beginRun(edm::Run const& iRun, edm::EventSetup const& iS
   bool changed = true ;
 
  edm::InputTag trigEventTag("hltTriggerSummaryAOD","","HLT") ;
-  hltPrescaleProvider_.init(iRun, iSetup, trigEventTag.process(), changed);
+//  hltPrescaleProvider_.init(iRun, iSetup, trigEventTag.process(), changed);
   
   // First check to see that we can initialise the hltconfig...
   if(hltConfig_.init(iRun, iSetup, trigEventTag.process(), changed)){
@@ -180,7 +182,7 @@ void IIHEModuleTrigger::beginRun(edm::Run const& iRun, edm::EventSetup const& iS
         if(hlt->isOnlySingleElectronSingleMuon() && includeSingleElectronSingleMuonTriggers_) addThisTrigger = true ;
         if(hlt->isOnlySingleElectronDoubleMuon() && includeSingleElectronDoubleMuonTriggers_) addThisTrigger = true ;
         if(hlt->isOnlyDoubleElectronSingleMuon() && includeDoubleElectronSingleMuonTriggers_) addThisTrigger = true ;
-        
+        if(hlt->isSinglePhoton()           && includeSinglePhotonTriggers_          ) addThisTrigger = true ;       
         // Finally, if we haven't added the trigger, we compare it to the list of
         // individual triggers to see if it exists there.  (I don't think is ever used in
         // the analysis, but it is included in case someone wants to use a small number

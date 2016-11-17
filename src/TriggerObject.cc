@@ -292,7 +292,7 @@ int HLTrigger::nSubstringInString(const std::string& str, const std::string& sub
 
 //int HLTrigger::status(const edm::Event& iEvent, edm::EventSetup const& iSetup, HLTConfigProvider const& hltConfig, HLTPrescaleProvider const& hltPrescale, Handle<TriggerResults> const& triggerResults, edm::Handle<trigger::TriggerEvent> trigEvent, edm::InputTag trigEventTag, IIHEAnalysis* analysis){
   // Okay, here we pass a lot of information to the method!
-int HLTrigger::status(const edm::Event& iEvent, const edm::EventSetup & iSetup, const HLTConfigProvider & hltConfig, HLTPrescaleProvider & Prescale, const Handle<TriggerResults> & triggerResults, edm::Handle<trigger::TriggerEvent> trigEvent, edm::InputTag trigEventTag, IIHEAnalysis* analysis){  
+int HLTrigger::status(const edm::Event& iEvent, const edm::EventSetup & iSetup, const HLTConfigProvider & hltConfig,int  Prescale, const Handle<TriggerResults> & triggerResults, edm::Handle<trigger::TriggerEvent> trigEvent, edm::InputTag trigEventTag, IIHEAnalysis* analysis){  
 
   // First check to see if we have successfully found the trigger.
   if(searchStatus_==searchedForAndFound && index_>=0){
@@ -302,9 +302,10 @@ int HLTrigger::status(const edm::Event& iEvent, const edm::EventSetup & iSetup, 
     
     // Now get the variables we care about.
     accept_   = triggerResults->accept(index_) ;
-    prescale_ = 1;
-//Prescale.prescaleValue (iEvent,iSetup,name_);
-//    prescale_ = hltConfig.prescaleValue(hltPrescale.prescaleSet(iEvent,iSetup), name_);
+//    prescale_ = 1;
+//    Prescale.prescaleValue (iEvent,iSetup,name_);
+//    int preScaleColumn = (Prescale.hltConfigProvider().inited()) ? Prescale.prescaleSet(iEvent,iSetup) : -1;
+    prescale_ = hltConfig.prescaleValue(Prescale, name_);
  
     // And finally loop over the filters.
     for(unsigned i=0 ; i<filters_.size() ; ++i){

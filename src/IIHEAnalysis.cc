@@ -29,7 +29,9 @@ using namespace std ;
 using namespace reco;
 using namespace edm ;
 
-IIHEAnalysis::IIHEAnalysis(const edm::ParameterSet& iConfig){
+IIHEAnalysis::IIHEAnalysis(const edm::ParameterSet& iConfig):
+hltPrescaleProvider_(iConfig, consumesCollector(), *this)
+{
   currentVarType_ = -1 ;
   debug_     = iConfig.getParameter<bool  >("debug"    ) ;
   git_hash_  = iConfig.getParameter<string>("git_hash" ) ;
@@ -78,6 +80,8 @@ CHOOSE_RELEASE_END CMSSW_5_3_11  */
   muonCollectionToken_ =  consumes<View<reco::Muon> > (muonCollectionLabel_);
   photonCollectionToken_ =  consumes<View<reco::Photon> > (photonCollectionLabel_); 
   superClusterCollectionToken_ =  consumes<reco::SuperClusterCollection> (superClusterCollectionLabel_);
+  trigEvent_ = consumes<trigger::TriggerEvent>(InputTag("hltTriggerSummaryAOD","","HLT"));
+
  
   firstPrimaryVertex_ = new math::XYZPoint(0.0,0.0,0.0) ;
   beamspot_           = new math::XYZPoint(0.0,0.0,0.0) ;
@@ -320,6 +324,10 @@ void IIHEAnalysis::addToMCTruthWhitelist(std::vector<int> pdgIds){
 
 void IIHEAnalysis::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
   beginEvent() ;
+
+
+
+  preScaleIndex_ = hltPrescaleProvider_.prescaleSet(iEvent,iSetup);
   // Get the default collections
   // These should be harmonised across submodules, where possible
 //  iEvent.getByLabel(superClusterCollectionLabel_, superClusterCollection_) ;
@@ -356,11 +364,17 @@ CHOOSE_RELEASE_END CMSSW_5_3_11*/
 }
 
 void IIHEAnalysis::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup){
+
+  bool changed = true ;
+  edm::InputTag trigEventTag("hltTriggerSummaryAOD","","HLT") ;
+  hltPrescaleProvider_.init(iRun, iSetup, trigEventTag.process(), changed);
+
   nRuns_.push_back(iRun.run());
   for(unsigned int i=0 ; i<childModules_.size() ; ++i){
     childModules_.at(i)->pubBeginRun(iRun, iSetup) ;
   }
 }
+
 void IIHEAnalysis::beginEvent(){
   acceptEvent_ = false ;
   rejectEvent_ = false ;

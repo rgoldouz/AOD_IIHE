@@ -117,7 +117,7 @@ public:
   bool  beginRun(HLTConfigProvider const&) ;
   
   int findIndex(HLTConfigProvider const&) ;
-  int status(const edm::Event&, edm::EventSetup const&, HLTConfigProvider const&, HLTPrescaleProvider&, Handle<TriggerResults> const&, edm::Handle<trigger::TriggerEvent>, edm::InputTag, IIHEAnalysis*) ;
+  int status(const edm::Event&, edm::EventSetup const&, HLTConfigProvider const&, int, Handle<TriggerResults> const&, edm::Handle<trigger::TriggerEvent>, edm::InputTag, IIHEAnalysis*) ;
   void store(IIHEAnalysis*) ;
   
   std::string name(){ return name_ ; }
@@ -130,6 +130,7 @@ public:
   bool isSingleMuon(){ return nMu_==1 ; }
   bool isDoubleMuon(){ return nMu_==2 ; }
   bool isTripleMuon(){ return nMu_==3 ; }
+  bool isSinglePhoton(){ return nPh_==1 ; }
   bool isSingleElectronSingleMuon(){ return (nEl_==1 && nMu_==1) ; }
   bool isSingleElectronDoubleMuon(){ return (nEl_==1 && nMu_==2) ; }
   bool isDoubleElectronSingleMuon(){ return (nEl_==2 && nMu_==1) ; }

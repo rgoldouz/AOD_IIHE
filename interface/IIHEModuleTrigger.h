@@ -2,7 +2,7 @@
 #define UserCode_IIHETree_IIHEModuleTrigger_h
 
 #include "UserCode/IIHETree/interface/IIHEModule.h"
-
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "UserCode/IIHETree/interface/TriggerObject.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
@@ -34,7 +34,7 @@ private:
   std::vector<HLTrigger*> HLTriggers_ ;
   
   HLTConfigProvider hltConfig_ ;
-  HLTPrescaleProvider hltPrescaleProvider_;
+//  HLTPrescaleProvider hltPrescaleProvider_;
 
   edm::InputTag hlTriggerResultsTag_ ;
   std::vector<std::string> HLTNamesFromConfig_ ;
@@ -68,5 +68,7 @@ private:
   bool includeSingleElectronSingleMuonTriggers_ ;
   bool includeSingleElectronDoubleMuonTriggers_ ;
   bool includeDoubleElectronSingleMuonTriggers_ ;
+  bool includeSinglePhotonTriggers_   ;
+
 };
 #endif

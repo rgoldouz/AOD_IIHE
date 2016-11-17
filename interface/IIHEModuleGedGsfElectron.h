@@ -12,6 +12,10 @@ private:
   edm::EDGetTokenT<reco::TrackCollection>       generalTracksToken_;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_ ;
   edm::EDGetTokenT<double> rhoTokenAll_; 
+  edm::EDGetTokenT<edm::ValueMap<float> > eleTrkPtIso_;
+  edm::EDGetTokenT<edm::View<reco::GsfElectron>> electronCollectionToken_;
+  edm::InputTag      electronCollectionLabel_ ;
+
 public:
   explicit IIHEModuleGedGsfElectron(const edm::ParameterSet& iConfig, edm::ConsumesCollector && iC);
   explicit IIHEModuleGedGsfElectron(const edm::ParameterSet& iConfig): IIHEModule(iConfig){};

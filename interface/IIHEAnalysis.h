@@ -27,7 +27,7 @@
 
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
 #include "DataFormats/EgammaCandidates/interface/PhotonFwd.h"
-
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
 
@@ -36,7 +36,8 @@
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "FWCore/Framework/interface/ConsumesCollector.h"
-
+#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h"
 // ROOT includes
 #include "TFile.h"
 #include "TTree.h"
@@ -118,7 +119,7 @@ public:
   }
   math::XYZPoint* getFirstPrimaryVertex(){ return firstPrimaryVertex_ ; }
   math::XYZPoint* getBeamspot(){ return beamspot_ ; }
-  
+  int getPreScaleIndex(){ return preScaleIndex_ ; }
 /* CHOOSE_RELEASE_START DEFAULT
   edm::EDGetTokenT<EcalRecHitCollection> getReducedBarrelRecHitCollectionToken(){ return reducedBarrelRecHitCollectionToken_ ; }
   edm::EDGetTokenT<EcalRecHitCollection> getReducedEndcapRecHitCollectionToken(){ return reducedEndcapRecHitCollectionToken_ ; }
@@ -214,11 +215,14 @@ private:
   edm::InputTag      electronCollectionLabel_ ;
   edm::InputTag          muonCollectionLabel_ ;
   edm::InputTag           primaryVertexLabel_ ;
+  edm::EDGetTokenT<trigger::TriggerEvent> trigEvent_;
   edm::Handle<reco::BeamSpot> beamspotHandle_ ;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_ ;
   math::XYZPoint* beamspot_ ;
   math::XYZPoint* firstPrimaryVertex_ ;
-  
+  int preScaleIndex_; 
+  HLTPrescaleProvider hltPrescaleProvider_;
+ 
   // The event only gets saved if acceptEvent_ == true
   bool acceptEvent_ ;
   // This variable is used to reject an event early on.  This prevents the analyser
@@ -244,6 +248,7 @@ private:
 //CHOOSE_RELEASE_END CMSSW_7_4_4 CMSSW_7_0_6_patch1 CMSSW_7_3_0 CMSSW_7_2_0 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSSW_7_6_3
 /*CHOOSE_RELEASE_START CMSSW_5_3_11 
 CHOOSE_RELEASE_END CMSSW_5_3_11*/
+
     
   bool debug_;
   std::string git_hash_  ;

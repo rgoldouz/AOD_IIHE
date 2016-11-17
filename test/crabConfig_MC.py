@@ -12,10 +12,12 @@ config = config()
 #config.General.requestName ='ZToEE_NNPDF30_13TeV-powheg_M_2300_3500'
 #config.General.requestName ='ZToEE_NNPDF30_13TeV-powheg_M_3500_4500'
 #config.General.requestName ='ZToEE_NNPDF30_13TeV-powheg_M_4500_6000'
-config.General.requestName ='ZToEE_NNPDF30_13TeV-powheg_M_6000_Inf'
+#config.General.requestName ='ZToEE_NNPDF30_13TeV-powheg_M_6000_Inf'
 #config.General.requestName ='DYToEE_NNPDF30_13TeV-powheg-pythia8'
 #config.General.requestName ='DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_ext1'
 #config.General.requestName ='DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8'
+config.General.requestName ='DoubleElectron_FlatPt-300To6500'
+
 
 config.General.workArea = 'crab_projects'
 config.General.transferOutputs = True
@@ -25,7 +27,7 @@ config.General.transferLogs = False
 #config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'IIHE.py'
-config.JobType.pyCfgParams = ['DataProcessing=mc']
+config.JobType.pyCfgParams = ['DataProcessing=mcreHLT']
 #config.JobType.outputFiles = ['outfile.root']
 
 #Data section: This section contains all the parameters related to the data to be analyzed, including the splitting parameters. 
@@ -43,7 +45,6 @@ config.JobType.pyCfgParams = ['DataProcessing=mc']
 #config.Data.inputDataset = '/DYToEE_NNPDF30_13TeV-powheg-pythia8/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/AODSIM'
 #config.Data.inputDataset = '/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext1-v1/AODSIM'
 #config.Data.inputDataset = '/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/AODSIM'
-
 #config.Data.inputDataset = '/ZToEE_NNPDF30_13TeV-powheg_M_50_120/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v2/AODSIM'
 #config.Data.inputDataset = '/ZToEE_NNPDF30_13TeV-powheg_M_120_200/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/AODSIM'
 #config.Data.inputDataset = '/ZToEE_NNPDF30_13TeV-powheg_M_200_400/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v2/AODSIM'
@@ -53,8 +54,8 @@ config.JobType.pyCfgParams = ['DataProcessing=mc']
 #config.Data.inputDataset = '/ZToEE_NNPDF30_13TeV-powheg_M_2300_3500/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/AODSIM'
 #config.Data.inputDataset = '/ZToEE_NNPDF30_13TeV-powheg_M_3500_4500/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/AODSIM'
 #config.Data.inputDataset = '/ZToEE_NNPDF30_13TeV-powheg_M_4500_6000/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/AODSIM'
-config.Data.inputDataset = '/ZToEE_NNPDF30_13TeV-powheg_M_6000_Inf/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/AODSIM'
-
+#config.Data.inputDataset = '/ZToEE_NNPDF30_13TeV-powheg_M_6000_Inf/RunIISpring16DR80-PUSpring16_80X_mcRun2_asymptotic_2016_v3-v1/AODSIM'
+config.Data.inputDataset = '/DoubleElectron_FlatPt-300To6500/RunIISpring16DR80-PUFlat0to50_80X_mcRun2_asymptotic_2016_v3-v1/AODSIM'
 
 #config.Data.inputDataset = '/DoubleEG/Run2015D-16Dec2015-v2/MINIAOD'
 config.Data.inputDBS = 'global'

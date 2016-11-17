@@ -23,8 +23,11 @@ IIHEModuleMCTruth::~IIHEModuleMCTruth(){}
 void IIHEModuleMCTruth::beginJob(){
  std::vector<int> MCPdgIdsToSave ;
   MCPdgIdsToSave.push_back(11) ; // Electron
+  MCPdgIdsToSave.push_back(12) ; // Electron neutrino
   MCPdgIdsToSave.push_back(13) ; // Muon
+  MCPdgIdsToSave.push_back(14) ; // Muon neutrino
   MCPdgIdsToSave.push_back(15) ; // Tau
+  MCPdgIdsToSave.push_back(16) ; // Tau neytrino
   MCPdgIdsToSave.push_back(21) ; // gluon
   MCPdgIdsToSave.push_back( 1) ; // d quark
   MCPdgIdsToSave.push_back( 2) ; // u quark
@@ -45,13 +48,6 @@ void IIHEModuleMCTruth::beginJob(){
   addBranch("mc_n", kUInt) ;
   addBranch("mc_weight", kFloat) ;
   addBranch("mc_w_sign", kFloat) ;
-  addBranch("mc_id_first", kInt) ;
-  addBranch("mc_id_second", kInt) ;
-  addBranch("mc_x_first", kFloat) ;
-  addBranch("mc_x_second", kFloat) ;
-  addBranch("mc_xPDF_first", kFloat) ;
-  addBranch("mc_xPDF_second", kFloat) ;
-  addBranch("mc_scalePDF", kFloat) ;
   setBranchType(kVectorInt) ;
   addBranch("mc_index") ;
   addBranch("mc_pdgId") ;
@@ -66,21 +62,6 @@ void IIHEModuleMCTruth::beginJob(){
   addBranch("mc_eta") ;
   addBranch("mc_phi") ;
   addBranch("mc_energy") ;
-  setBranchType(kVectorUInt) ;
-  addBranch("mc_numberOfDaughters") ;
-  addBranch("mc_numberOfMothers"  ) ;
-  setBranchType(kVectorVectorInt) ;
-  addBranch("mc_mother_index") ;
-  addBranch("mc_mother_pdgId") ;
-  setBranchType(kVectorVectorFloat) ;
-  addBranch("mc_mother_px"    ) ;
-  addBranch("mc_mother_py"    ) ;
-  addBranch("mc_mother_pz"    ) ;
-  addBranch("mc_mother_pt"    ) ;
-  addBranch("mc_mother_eta"   ) ;
-  addBranch("mc_mother_phi"   ) ;
-  addBranch("mc_mother_energy") ;
-  addBranch("mc_mother_mass"  ) ;
   
   setBranchType(kInt) ;
   addBranch("mc_trueNumInteractions") ;
@@ -95,6 +76,7 @@ void IIHEModuleMCTruth::beginJob(){
 
 // ------------ method called to for each event  ------------
 void IIHEModuleMCTruth::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
+
   edm::Handle<GenEventInfoProduct> genEventInfoHandle;
   iEvent.getByToken(generatorLabel_, genEventInfoHandle);
   float weight = genEventInfoHandle->weight() ;
@@ -102,22 +84,13 @@ void IIHEModuleMCTruth::analyze(const edm::Event& iEvent, const edm::EventSetup&
   store("mc_weight"                  ,weight);
   store("mc_w_sign"             , w_sign) ;
   nEventsWeighted_ += w_sign ;
-
-  store("mc_id_first" , genEventInfoHandle->pdf()->id.first);    // PDG ID of incoming parton #1
-  store("mc_id_second" , genEventInfoHandle->pdf()->id.second);   // PDG ID of incoming parton #2
-  store("mc_x_first", genEventInfoHandle->pdf()->x.first);     // x value of parton #1
-  store("mc_x_second" , genEventInfoHandle->pdf()->x.second);    // x value of parton #2
-  store("mc_xPDF_first" , genEventInfoHandle->pdf()->xPDF.first);  // PDF weight for parton #1
-  store("mc_xPDF_second" , genEventInfoHandle->pdf()->xPDF.second); // PDF weight for parton #2
-  store("mc_scalePDF" , genEventInfoHandle->pdf()->scalePDF);    // scale of the hard interaction
-   
   // Fill pile-up related informations
   // --------------------------------
   edm::Handle<std::vector< PileupSummaryInfo > >  puInfo ;
   iEvent.getByToken(puCollection_, puInfo) ;
   int trueNumInteractions = -1 ;
   int PU_NumInteractions  = -1 ;
-  if(puInfo.isValid()){
+ if(puInfo.isValid()){
     std::vector<PileupSummaryInfo>::const_iterator PVI;
     for(PVI = puInfo->begin() ; PVI != puInfo->end() ; ++PVI){
       int BX = PVI->getBunchCrossing() ;
@@ -127,130 +100,31 @@ void IIHEModuleMCTruth::analyze(const edm::Event& iEvent, const edm::EventSetup&
       }
     }
   }
-  
+
   Handle<GenParticleCollection> pGenParticles ;
   iEvent.getByToken(genParticlesCollection_, pGenParticles) ;
   GenParticleCollection genParticles(pGenParticles->begin(),pGenParticles->end()) ;
   
   // These variables are used to match up mothers to daughters at the end.
   int counter = 0 ;
-  
   MCTruthRecord_.clear() ;
+  
+
   for(GenParticleCollection::const_iterator mc_iter = genParticles.begin() ; mc_iter!=genParticles.end() ; ++mc_iter){
-    int pdgId = mc_iter->pdgId() ;
-    float pt  = mc_iter->pt()    ;
-    // First check the whitelist.
-    bool whitelist_accept = false ;
-    for(unsigned int i=0 ; i<whitelist_.size() ; ++i){
-      if(abs(pdgId)==abs(whitelist_.at(i))){
-        whitelist_accept = true ;
-        break ;
-      }
-    }
-    
-    // Ignore particles with exactly one daughter (X => X => X etc)
-    bool daughters_accept = (mc_iter->numberOfDaughters()!=1) ;
-    
-    // Remove objects with zero pT.
-    bool nonZeroPt_accept = (pt>1e-3) ;
-    
-    // Now check the thresholds.
-    bool thresholds_accept = false ;
-    float pt_threshold = (pdgId==21 || abs(pdgId)<5) ? 10 : pt_threshold_ ;
-    if(             pt>pt_threshold ) thresholds_accept = true  ;
-    if(mc_iter->mass()> m_threshold_) thresholds_accept = true  ;
-    
-    // Now combine them all.
-    bool accept = (whitelist_accept && daughters_accept && thresholds_accept && nonZeroPt_accept) ;
-    if(false==accept) continue ;
-    // Now go up the ancestry until we find the real parent
-    const Candidate* parent = mc_iter->mother() ;
-    const Candidate* child  = mc_iter->clone()  ;
-    while(parent->pdgId()==pdgId){
-      child  = parent ;
-      parent = parent->mother() ;
-    }
-    
-    // Create a truth record instance.
-    MCTruthObject* MCTruth = new MCTruthObject((reco::Candidate*)&*mc_iter) ;
-    
-    // Add all the mothers
-    for(unsigned int mother_iter=0 ; mother_iter<child->numberOfMothers() ; ++mother_iter){
-      MCTruth->addMother(child->mother(mother_iter)) ;
-    }
-    
-    // Finally check to see if this overlaps with an existing truth particle.
-    bool overlap = false ;
-    for(unsigned int i=0 ; i<MCTruthRecord_.size() ; ++i){
-      const reco::Candidate* comp = MCTruthRecord_.at(i)->getCandidate() ;
-      float DR = deltaR(comp->eta(),comp->phi(),MCTruth->getCandidate()->eta(),MCTruth->getCandidate()->phi()) ;
-      if(DR<DeltaROverlapThreshold_){
-        overlap = true ;
-        break ;
-      }
-    }
-    if(true==overlap) continue ;
-    
-    // Then push back the MC truth information
-    MCTruthRecord_.push_back(MCTruth) ;
-    counter++ ;
-  }
-  for(unsigned int i=0 ; i<MCTruthRecord_.size() ; ++i){
-    MCTruthObject* ob = MCTruthRecord_.at(i) ;
-    std::vector<int  > mc_mother_index ;
-    std::vector<int  > mc_mother_pdgId ;
-    std::vector<float> mc_mother_px ;
-    std::vector<float> mc_mother_py ;
-    std::vector<float> mc_mother_pz ;
-    std::vector<float> mc_mother_pt ;
-    std::vector<float> mc_mother_eta ;
-    std::vector<float> mc_mother_phi ;
-    std::vector<float> mc_mother_energy ;
-    std::vector<float> mc_mother_mass ;
-    for(unsigned int j=0 ; j<ob->nMothers() ; ++j){
-      const reco::Candidate* mother = ob->getMother(j) ;
-      if(mother){
-        int mother_index_tmp = ob->matchMother(MCTruthRecord_, j) ;
-        mc_mother_index .push_back(mother_index_tmp) ;
-        mc_mother_pdgId .push_back(mother->pdgId() ) ;
-        mc_mother_px    .push_back(mother->px()    ) ;
-        mc_mother_py    .push_back(mother->py()    ) ;
-        mc_mother_pz    .push_back(mother->pz()    ) ;
-        mc_mother_pt    .push_back(mother->pt()    ) ;
-        mc_mother_eta   .push_back(mother->eta()   ) ;
-        mc_mother_phi   .push_back(mother->phi()   ) ;
-        mc_mother_energy.push_back(mother->energy()) ;
-        mc_mother_mass  .push_back(mother->mass()  ) ;
-      }
-    }
-    if(mc_mother_index.size()==0) mc_mother_index.push_back(0) ;
-    store("mc_mother_index" , mc_mother_index ) ;
-    store("mc_mother_pdgId" , mc_mother_pdgId ) ;
-    store("mc_mother_px"    , mc_mother_px    ) ;
-    store("mc_mother_py"    , mc_mother_py    ) ;
-    store("mc_mother_pz"    , mc_mother_pz    ) ;
-    store("mc_mother_pt"    , mc_mother_pt    ) ;
-    store("mc_mother_eta"   , mc_mother_eta   ) ;
-    store("mc_mother_phi"   , mc_mother_phi   ) ;
-    store("mc_mother_energy", mc_mother_energy) ;
-    store("mc_mother_mass"  , mc_mother_mass  ) ;
-    
-    store("mc_numberOfDaughters", (unsigned int)(ob->getCandidate()->numberOfDaughters())) ;
-    store("mc_numberOfMothers"  , (unsigned int)(ob->nMothers())) ;
-    
-    store("mc_px"     , ob->getCandidate()->px()    ) ;
-    store("mc_py"     , ob->getCandidate()->py()    ) ;
-    store("mc_pz"     , ob->getCandidate()->pz()    ) ;
-    store("mc_pt"     , ob->getCandidate()->pt()    ) ;
-    store("mc_eta"    , ob->getCandidate()->eta()   ) ;
-    store("mc_phi"    , ob->getCandidate()->phi()   ) ;
-    store("mc_energy" , ob->getCandidate()->energy()) ;
-    store("mc_mass"   , ob->getCandidate()->mass()  ) ;
-    
-    store("mc_index"  , i ) ;
-    store("mc_pdgId"  , ob->getCandidate()->pdgId() ) ;
-    store("mc_charge" , ob->getCandidate()->charge()) ;
-    store("mc_status" , ob->getCandidate()->status()) ;
+    counter = counter + 1;
+    store("mc_px"     , mc_iter->px()    ) ;
+    store("mc_py"     , mc_iter->py()    ) ;
+    store("mc_pz"     , mc_iter->pz()    ) ;
+    store("mc_pt"     , mc_iter->pt()    ) ;
+    store("mc_eta"    , mc_iter->eta()   ) ;
+    store("mc_phi"    , mc_iter->phi()   ) ;
+    store("mc_energy" , mc_iter->energy()) ;
+    store("mc_mass"   , mc_iter->mass()  ) ;
+
+    store("mc_index"  , counter ) ;
+    store("mc_pdgId"  , mc_iter->pdgId() ) ;
+    store("mc_charge" , mc_iter->charge()) ;
+    store("mc_status" , mc_iter->status()) ;
   }
   
   store("mc_trueNumInteractions", trueNumInteractions) ;

@@ -44,6 +44,8 @@ IIHEModuleGedGsfElectron::IIHEModuleGedGsfElectron(const edm::ParameterSet& iCon
   generalTracksToken_ = iC.consumes<reco::TrackCollection> (iConfig.getParameter<InputTag>("generalTracksLabel"));
   beamSpotToken_      = consumes<reco::BeamSpot>(iConfig.getParameter<InputTag>("beamSpot")) ;
   rhoTokenAll_ = iC.consumes<double> (iConfig.getParameter<edm::InputTag>("eventRho"));
+  eleTrkPtIso_ = iC.consumes<edm::ValueMap<float> >(iConfig.getParameter<edm::InputTag>("eleTrkPtIsoLabel"));
+  electronCollectionToken_     = iC.consumes<edm::View<reco::GsfElectron>> (iConfig.getParameter<edm::InputTag>("electronCollection")) ;
   ETThreshold_ = iConfig.getUntrackedParameter<double>("electrons_ETThreshold", 0.0 ) ;
 }
 IIHEModuleGedGsfElectron::~IIHEModuleGedGsfElectron(){}
@@ -56,6 +58,7 @@ void IIHEModuleGedGsfElectron::beginJob(){
   addBranch("gsf_energy") ;
   addBranch("gsf_p") ;
   addBranch("gsf_pt") ;
+  addBranch("gsf_et") ;
   addBranch("gsf_scE1x5") ;
   addBranch("gsf_scE5x5") ;
   addBranch("gsf_scE2x5Max") ;
@@ -81,7 +84,7 @@ void IIHEModuleGedGsfElectron::beginJob(){
   addBranch("gsf_hcalDepth1OverEcal") ;
   addBranch("gsf_hcalDepth2OverEcal") ;
   addBranch("gsf_dr03TkSumPt") ;
-  addBranch("gsf_dr03TkSumPtCorrected") ;
+  addBranch("gsf_dr03TkSumPtHEEP7") ;
   addBranch("gsf_dr03EcalRecHitSumEt") ;
   addBranch("gsf_dr03HcalDepth1TowerSumEt") ;
   addBranch("gsf_dr03HcalDepth2TowerSumEt") ;
@@ -158,6 +161,10 @@ void IIHEModuleGedGsfElectron::beginJob(){
   addBranch("gsf_sc_seed_rawId", kVectorInt) ;
   addBranch("gsf_sc_seed_ieta", kVectorInt) ;
   addBranch("gsf_sc_seed_iphi", kVectorInt) ;
+
+  setBranchType(kVectorBool) ;
+  addBranch("gsf_sc_seed_kHasSwitchToGain6") ;
+  addBranch("gsf_sc_seed_kHasSwitchToGain1") ;
 
   setBranchType(kVectorFloat) ;
   addBranch("gsf_swissCross") ;
@@ -238,6 +245,10 @@ void IIHEModuleGedGsfElectron::analyze(const edm::Event& iEvent, const edm::Even
   const EcalRecHitCollection* theBarrelEcalRecHits = EBHits.product () ;
   const EcalRecHitCollection* theEndcapEcalRecHits = EEHits.product () ;
 
+  edm::Handle<edm::View<reco::GsfElectron>>     electronCollection_ ;
+  iEvent.getByToken( electronCollectionToken_ , electronCollection_) ;
+  edm::Handle<edm::ValueMap<float>> eleTrkPtIsoHandle_;
+  iEvent.getByToken(eleTrkPtIso_,eleTrkPtIsoHandle_);
 
   edm::Handle<reco::BeamSpot> beamspotHandle_ ;
   iEvent.getByToken(beamSpotToken_, beamspotHandle_) ;
@@ -259,12 +270,14 @@ void IIHEModuleGedGsfElectron::analyze(const edm::Event& iEvent, const edm::Even
   double rho = *rhoHandle ;
  
   unsigned int gsf_n = 0 ;
+  unsigned int gsfref = -1 ;
   for(vector<reco::GsfElectron>::const_iterator gsfiter=electrons.begin() ; gsfiter!=electrons.end() ; ++gsfiter){
-    
+
+    gsfref++;
     float ET = gsfiter->caloEnergy()*sin(2.*atan(exp(-1.*gsfiter->superCluster()->eta()))) ;
     if(ET<ETThreshold_ && gsfiter->pt()<ETThreshold_) continue ;
     gsf_n++ ;
-    
+//    reco::GsfElectronRef gsfref(electrons,gsf_n); 
     //Fill the gsf related variables
 
 //CHOOSE_RELEASE_START DEFAULT CMSSW_7_4_4 CMSSW_7_3_0 CMSSW_7_2_0 CMSSW_7_6_3
@@ -279,6 +292,7 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
     store("gsf_energy"                        , gsfiter->energy()                        ) ;
     store("gsf_p"                             , gsfiter->p()                             ) ;
     store("gsf_pt"                            , gsfiter->pt()                            ) ;
+    store("gsf_et"                            , gsfiter->et()                            ) ;
     store("gsf_classification"                , gsfiter->classification()                ) ;
     store("gsf_scE1x5"                        , gsfiter->scE1x5()                        ) ;
     store("gsf_scE5x5"                        , gsfiter->scE5x5()                        ) ;
@@ -298,7 +312,7 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
     store("gsf_hcalDepth1OverEcal"            , gsfiter->hcalDepth1OverEcal()            ) ;
     store("gsf_hcalDepth2OverEcal"            , gsfiter->hcalDepth2OverEcal()            ) ;
     store("gsf_dr03TkSumPt"                   , gsfiter->dr03TkSumPt()                   ) ;
-    store("gsf_dr03TkSumPtCorrected"           , gsfiter->dr03TkSumPt()           ) ;
+    store("gsf_dr03TkSumPtHEEP7"              , (*eleTrkPtIsoHandle_).get(gsfref)        ) ;
     store("gsf_dr03EcalRecHitSumEt"           , gsfiter->dr03EcalRecHitSumEt()           ) ;
     store("gsf_dr03HcalDepth1TowerSumEt"      , gsfiter->dr03HcalDepth1TowerSumEt()      ) ;
     store("gsf_dr03HcalDepth2TowerSumEt"      , gsfiter->dr03HcalDepth2TowerSumEt()      ) ;
@@ -364,8 +378,12 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
     store("gsf_sc_phiWidth"   , gsfiter->superCluster()->phiWidth()               ) ;
     store("gsf_sc_etaWidth"   , gsfiter->superCluster()->etaWidth()               ) ;
     store("gsf_sc_seed_eta"   ,gsfiter->superCluster()->seed()->eta()             ) ;
-
     store("gsf_sc_seed_rawId" , gsfiter->superCluster()->seed()->seed().rawId()   );
+    const EcalRecHitCollection *recHits = (gsfiter->isEB()) ? lazytool.getEcalEBRecHitCollection() : lazytool.getEcalEERecHitCollection();
+    EcalRecHitCollection::const_iterator seedRecHit = recHits->find(gsfiter->superCluster()->seed()->seed()) ;
+    store("gsf_sc_seed_kHasSwitchToGain6" , seedRecHit->checkFlag(EcalRecHit::kHasSwitchToGain6) ) ;
+    store("gsf_sc_seed_kHasSwitchToGain1" , seedRecHit->checkFlag(EcalRecHit::kHasSwitchToGain1)  ) ;
+
 
     const std::vector<std::pair<DetId,float> > & hits= gsfiter->superCluster()->hitsAndFractions();
     if (gsfiter->isEB()){
@@ -459,7 +477,7 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
       gsf_nLostInnerHits < 2                                               &&
       fabs(gsfiter->gsfTrack()->dxy(*firstpvertex)) < 0.02                       &&
       gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2 + 0.03 * ET + 0.28 * rho   && 
-      gsfiter->dr03TkSumPt() < 5) isHeep = true;
+      (*eleTrkPtIsoHandle_).get(gsfref) < 5) isHeep = true;
     //endcap
     if ( ET > 35  && (fabs(gsfiter->superCluster()->eta()) > 1.566  || (abs(gsfiter->superCluster()->eta()) < 2.5) )&&
       gsfiter->ecalDrivenSeed()                                            &&
@@ -471,7 +489,7 @@ CHOOSE_RELEASE_END CMSSW_7_0_6_patch1 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSS
       fabs(gsfiter->gsfTrack()->dxy(*firstpvertex)) < 0.05                       &&
       (( ET < 50 && gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2.5 + 0.28 * rho) || 
       ( ET > 50 && gsfiter->dr03EcalRecHitSumEt() + gsfiter->dr03HcalDepth1TowerSumEt() < 2.5 + 0.03 * (ET-50) + 0.28 * rho)) &&
-      gsfiter->dr03TkSumPt() < 5) isHeep = true;
+      (*eleTrkPtIsoHandle_).get(gsfref)) isHeep = true;
 
     store("gsf_isHeepV60", isHeep);
  }
