@@ -215,6 +215,7 @@ private:
   edm::InputTag      electronCollectionLabel_ ;
   edm::InputTag          muonCollectionLabel_ ;
   edm::InputTag           primaryVertexLabel_ ;
+  edm::InputTag trigEventTag_;
   edm::EDGetTokenT<trigger::TriggerEvent> trigEvent_;
   edm::Handle<reco::BeamSpot> beamspotHandle_ ;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_ ;

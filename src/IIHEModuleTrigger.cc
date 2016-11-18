@@ -29,8 +29,10 @@ IIHEModuleTrigger::IIHEModuleTrigger(const edm::ParameterSet& iConfig, edm::Cons
   nAccept_ = 0 ;
   nErrors_ = 0 ;
 
- triggerBits_ = iC.consumes<edm::TriggerResults>(InputTag("TriggerResults","","HLT"));
- trigEvent_ = iC.consumes<trigger::TriggerEvent>(InputTag("hltTriggerSummaryAOD","","HLT"));
+  hlTriggerResultsTag_ = iConfig.getParameter<InputTag>("TriggerResults");
+  trigEventTag_ = iConfig.getParameter<InputTag>("triggerEvent");
+  triggerBits_ = iC.consumes<edm::TriggerResults>(hlTriggerResultsTag_);
+  trigEvent_ = iC.consumes<trigger::TriggerEvent>(trigEventTag_);
   
   // Comments are given with "steps" that should be read in order.  The code for the
   // triggers is complicated, so we need some help with navigation!
@@ -118,7 +120,6 @@ void IIHEModuleTrigger::analyze(const edm::Event& iEvent, const edm::EventSetup&
   // Get hold of TriggerResults, using the normal getByLabel method.
  edm::Handle<TriggerResults> HLTR ;
  iEvent.getByToken(triggerBits_, HLTR) ;
- edm::InputTag trigEventTag("hltTriggerSummaryAOD","","HLT") ;  
   // Now fill the values.
   IIHEAnalysis* analysis = parent_ ;
   for(unsigned int i=0 ; i<HLTriggers_.size() ; i++){
@@ -126,7 +127,7 @@ void IIHEModuleTrigger::analyze(const edm::Event& iEvent, const edm::EventSetup&
     HLTrigger* hlt = HLTriggers_.at(i) ;
     // Then pass the trigger information to the trigger so that it can pick out the
     // results from the event.
-    hlt->status(iEvent, iSetup, hltConfig_, parent_->getPreScaleIndex(), HLTR, trigEvent, trigEventTag, analysis) ;
+    hlt->status(iEvent, iSetup, hltConfig_, parent_->getPreScaleIndex(), HLTR, trigEvent, trigEventTag_, analysis) ;
     // Finally store the information to the ntuple.
     hlt->store(analysis) ;
   }
@@ -142,11 +143,8 @@ void IIHEModuleTrigger::beginRun(edm::Run const& iRun, edm::EventSetup const& iS
   // case we ever try to save information to ntuple before we've set this flag.)
   bool changed = true ;
 
- edm::InputTag trigEventTag("hltTriggerSummaryAOD","","HLT") ;
-//  hltPrescaleProvider_.init(iRun, iSetup, trigEventTag.process(), changed);
-  
   // First check to see that we can initialise the hltconfig...
-  if(hltConfig_.init(iRun, iSetup, trigEventTag.process(), changed)){
+  if(hltConfig_.init(iRun, iSetup, trigEventTag_.process(), changed)){
     // ...and that we've noticed that things have changed...
     if(changed){
       // This is debug information.  It's very verbose, so I commented it out.

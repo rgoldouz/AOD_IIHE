@@ -37,6 +37,7 @@ private:
 //  HLTPrescaleProvider hltPrescaleProvider_;
 
   edm::InputTag hlTriggerResultsTag_ ;
+  edm::InputTag trigEventTag_;
   std::vector<std::string> HLTNamesFromConfig_ ;
   std::vector<std::string> triggerNamesFromPSet_ ;
 

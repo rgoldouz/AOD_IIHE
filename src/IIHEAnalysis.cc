@@ -61,7 +61,7 @@ CHOOSE_RELEASE_END CMSSW_5_3_11*/
   electronCollectionLabel_     = iConfig.getParameter<edm::InputTag>("electronCollection"      ) ;
   muonCollectionLabel_         = iConfig.getParameter<edm::InputTag>("muonCollection"          ) ;
   beamSpotToken_      = consumes<reco::BeamSpot>(iConfig.getParameter<InputTag>("beamSpot")) ; 
-
+  trigEventTag_ = iConfig.getParameter<InputTag>("triggerEvent");
 
  
   reducedBarrelRecHitCollection_ = iConfig.getParameter<edm::InputTag>("ebReducedRecHitCollection") ;
@@ -80,7 +80,7 @@ CHOOSE_RELEASE_END CMSSW_5_3_11  */
   muonCollectionToken_ =  consumes<View<reco::Muon> > (muonCollectionLabel_);
   photonCollectionToken_ =  consumes<View<reco::Photon> > (photonCollectionLabel_); 
   superClusterCollectionToken_ =  consumes<reco::SuperClusterCollection> (superClusterCollectionLabel_);
-  trigEvent_ = consumes<trigger::TriggerEvent>(InputTag("hltTriggerSummaryAOD","","HLT"));
+  trigEvent_ = consumes<trigger::TriggerEvent>(trigEventTag_);
 
  
   firstPrimaryVertex_ = new math::XYZPoint(0.0,0.0,0.0) ;
@@ -366,8 +366,7 @@ CHOOSE_RELEASE_END CMSSW_5_3_11*/
 void IIHEAnalysis::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup){
 
   bool changed = true ;
-  edm::InputTag trigEventTag("hltTriggerSummaryAOD","","HLT") ;
-  hltPrescaleProvider_.init(iRun, iSetup, trigEventTag.process(), changed);
+  hltPrescaleProvider_.init(iRun, iSetup, trigEventTag_.process(), changed);
 
   nRuns_.push_back(iRun.run());
   for(unsigned int i=0 ; i<childModules_.size() ; ++i){

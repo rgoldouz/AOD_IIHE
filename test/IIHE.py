@@ -124,7 +124,7 @@ pt_threshold = 15
 
 # Only save some triggers.
 process.IIHEAnalysis.TriggerResults = cms.InputTag('TriggerResults', '', 'HLT')
-process.IIHEAnalysis.triggerEvent = cms.InputTag('selectedPatTrigger')
+process.IIHEAnalysis.triggerEvent = cms.InputTag('hltTriggerSummaryAOD','','HLT')
 triggers = 'singleElectron;doubleElectron;singleMuon;singlePhoton'
 process.IIHEAnalysis.triggers = cms.untracked.string(triggers)
 
