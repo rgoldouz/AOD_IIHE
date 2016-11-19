@@ -27,6 +27,9 @@ config.General.transferLogs = False
 #config.section_('JobType')
 config.JobType.pluginName = 'Analysis'
 config.JobType.psetName = 'IIHE.py'
+#if it is not reHLT use
+#config.JobType.pyCfgParams = ['DataProcessing=mc']
+#if you are running on reHLT use
 config.JobType.pyCfgParams = ['DataProcessing=mcreHLT']
 #config.JobType.outputFiles = ['outfile.root']
 
