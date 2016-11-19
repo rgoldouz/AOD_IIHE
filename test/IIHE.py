@@ -32,7 +32,7 @@ options.register('DataProcessing',
                  "data",
                  opts.VarParsing.multiplicity.singleton,
                  opts.VarParsing.varType.string,
-                 'Data processing types. Options are:mc,data')
+                 'Data processing types. Options are:mc,mcreHLT,data,rerecodata,promptdata')
 options.register('dataset',
                  "",
                  opts.VarParsing.multiplicity.singleton,
@@ -90,8 +90,8 @@ if options.DataProcessing == "data":
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring())
 
-#process.source.fileNames.append( 'file:MC80.root' )
-process.source.fileNames.append( 'file:rerecodata.root' )
+process.source.fileNames.append( 'file:MC.root' )
+#process.source.fileNames.append( 'file:rerecodata.root' )
 #process.source.fileNames.append( 'file:data.root' )
 #process.source.fileNames.append( 'file:ZToEE_NNPDF30_13TeV-powheg_M_2300_3500.root' )
 #process.source.fileNames.append( 'file:ZToEE_NNPDF30_13TeV-powheg_M_120_200_PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_v3-v1_S2EGHEIssue_11.root')
@@ -125,6 +125,11 @@ pt_threshold = 15
 # Only save some triggers.
 process.IIHEAnalysis.TriggerResults = cms.InputTag('TriggerResults', '', 'HLT')
 process.IIHEAnalysis.triggerEvent = cms.InputTag('hltTriggerSummaryAOD','','HLT')
+if options.DataProcessing == "mcreHLT":
+  process.IIHEAnalysis.TriggerResults = cms.InputTag('TriggerResults', '', 'HLT2')
+  process.IIHEAnalysis.triggerEvent = cms.InputTag('hltTriggerSummaryAOD','','HLT2')
+
+
 triggers = 'singleElectron;doubleElectron;singleMuon;singlePhoton'
 process.IIHEAnalysis.triggers = cms.untracked.string(triggers)
 
