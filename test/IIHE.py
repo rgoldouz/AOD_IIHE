@@ -90,7 +90,7 @@ if options.DataProcessing == "data":
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring())
 
-process.source.fileNames.append( 'file:MC.root' )
+process.source.fileNames.append( 'file:l.root' )
 #process.source.fileNames.append( 'file:rerecodata.root' )
 #process.source.fileNames.append( 'file:data.root' )
 #process.source.fileNames.append( 'file:ZToEE_NNPDF30_13TeV-powheg_M_2300_3500.root' )

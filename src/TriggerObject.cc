@@ -10,8 +10,8 @@ TriggerFilter::TriggerFilter(std::string name, std::string triggerName){
   triggerName_ = triggerName ;
   
   // So far we only store eta and phi, but we can also all ET if we want to.
-  etaBranchName_ = "trig_" + triggerName_ + "_" + name_ + "_eta" ;
-  phiBranchName_ = "trig_" + triggerName_ + "_" + name_ + "_phi" ;
+  etaBranchName_ = "trig_" + triggerName_.substr(0, triggerName_.find("_v")) + "_" + name_ + "_eta" ;
+  phiBranchName_ = "trig_" + triggerName_.substr(0, triggerName_.find("_v")) + "_" + name_ + "_phi" ;
 }
 int TriggerFilter::createBranches(IIHEAnalysis* analysis){
   // Try to add the branches, and return the number of added branches.
@@ -149,10 +149,10 @@ HLTrigger::HLTrigger(std::string name, HLTConfigProvider hltConfig){
   // Reset to the default values.  This must be done at each new run, so it is done in its
   // own method that can be called multiple times.
   reset() ;
-  
+
   // Declare the branch names.
-  acceptBranchName_   = "trig_" + name + "_accept"   ;
-  prescaleBranchName_ = "trig_" + name + "_prescale" ;
+  acceptBranchName_   = "trig_" + name.substr(0, name.find("_v")) + "_accept"   ;
+  prescaleBranchName_ = "trig_" + name.substr(0, name.find("_v")) + "_prescale" ;
   
   // Now parse the name to see how many superclusters, electrons etc are in the trigger.
   nSC_     = nSuperclustersInTriggerName() ;

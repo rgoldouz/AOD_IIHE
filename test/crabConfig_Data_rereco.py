@@ -10,7 +10,11 @@ config = config()
 #config.General.requestName = 'DoubleEG_Run2016F-23Sep2016-v1_AOD'
 #config.General.requestName = 'DoubleEG_Run2016G-23Sep2016-v1_AOD'
 #config.General.requestName = 'DoubleEG_Run2016H-PromptReco-v2_AOD'
-config.General.requestName = 'DoubleEG_Run2016H-PromptReco-v3_AOD'
+#config.General.requestName = 'DoubleEG_Run2016H-PromptReco-v3_AOD'
+#config.General.requestName = 'DoubleEG_Run2016B-23Sep2016-v3_AOD_resubmit'
+#config.General.requestName = 'DoubleEG_Run2016C-23Sep2016-v1_AOD_resubmit'
+#config.General.requestName = 'DoubleEG_Run2016D-23Sep2016-v1_AOD_resubmit'
+config.General.requestName = 'DoubleEG_Run2016E-23Sep2016-v1_AOD_resubmit'
 config.General.workArea = 'crab_projects_23Sep2016'
 config.General.transferOutputs = True
 config.General.transferLogs = False
@@ -22,9 +26,9 @@ config.JobType.pluginName = 'Analysis'
 #If rereco RUNS B-G
 config.JobType.psetName = 'IIHE.py'
 #If rereco RUNS B-G
-#config.JobType.pyCfgParams = ['DataProcessing=rerecodata']
+config.JobType.pyCfgParams = ['DataProcessing=rerecodata']
 #If promptreco RUN H
-config.JobType.pyCfgParams = ['DataProcessing=promptdata']
+#config.JobType.pyCfgParams = ['DataProcessing=promptdata']
 #config.JobType.outputFiles = ['outfile.root']
 
 #Data section: This section contains all the parameters related to the data to be analyzed, including the splitting parameters. 
@@ -32,21 +36,26 @@ config.JobType.pyCfgParams = ['DataProcessing=promptdata']
 #config.Data.inputDataset = '/DoubleEG/Run2016B-23Sep2016-v3/AOD'
 #config.Data.inputDataset = '/DoubleEG/Run2016C-23Sep2016-v1/AOD'
 #config.Data.inputDataset = '/DoubleEG/Run2016D-23Sep2016-v1/AOD'
-#config.Data.inputDataset = '/DoubleEG/Run2016E-23Sep2016-v1/AOD'
+config.Data.inputDataset = '/DoubleEG/Run2016E-23Sep2016-v1/AOD'
 #config.Data.inputDataset = '/DoubleEG/Run2016F-23Sep2016-v1/AOD'
 #config.Data.inputDataset = '/DoubleEG/Run2016G-23Sep2016-v1/AOD'
 #config.Data.inputDataset = '/DoubleEG/Run2016H-PromptReco-v2/AOD'
-config.Data.inputDataset = '/DoubleEG/Run2016H-PromptReco-v3/AOD'
+#config.Data.inputDataset = '/DoubleEG/Run2016H-PromptReco-v3/AOD'
 
 
 
 
 config.Data.inputDBS = 'global'
 config.Data.splitting = 'LumiBased'
-config.Data.unitsPerJob = 15
+config.Data.unitsPerJob = 8
 config.Data.ignoreLocality = True
+#config.Site.whitelist = ['']
 #config.Data.lumiMask = 'Json_totalRuns_160626_2.txt'
-config.Data.runRange = '273150-284068'  #  this is runF and G in 9 of Sep
+#config.Data.lumiMask = 'crab_projects_23Sep2016/crab_DoubleEG_Run2016B-23Sep2016-v3_AOD/results/notFinishedLumis.json'
+#config.Data.lumiMask = 'crab_projects_23Sep2016/crab_DoubleEG_Run2016C-23Sep2016-v1_AOD/results/notFinishedLumis.json'
+#config.Data.lumiMask = 'crab_projects_23Sep2016/crab_DoubleEG_Run2016D-23Sep2016-v1_AOD/results/notFinishedLumis.json'
+config.Data.lumiMask = 'crab_projects_23Sep2016/crab_DoubleEG_Run2016E-23Sep2016-v1_AOD/results/notFinishedLumis.json'
+#config.Data.runRange = '273150-284068'  #  this is runF and G in 9 of Sep
 #config.Data.outLFNDirBase = '/store/user/%s/' % (getUsernameFromSiteDB())
 #config.Data.publication = True
 #config.Data.outputDatasetTag = 'CRAB3_tutorial_May2015_Data_analysis'

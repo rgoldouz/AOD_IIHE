@@ -32,7 +32,7 @@ private:
   bool addHLTrigger(HLTrigger*) ;
   std::vector<L1Trigger*> L1Triggers_ ;
   std::vector<HLTrigger*> HLTriggers_ ;
-  
+ 
   HLTConfigProvider hltConfig_ ;
 //  HLTPrescaleProvider hltPrescaleProvider_;
 
@@ -40,6 +40,7 @@ private:
   edm::InputTag trigEventTag_;
   std::vector<std::string> HLTNamesFromConfig_ ;
   std::vector<std::string> triggerNamesFromPSet_ ;
+  std::vector<std::string> savedHLTriggers_ ;
 
   edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
   edm::EDGetTokenT<trigger::TriggerEvent> trigEvent_;

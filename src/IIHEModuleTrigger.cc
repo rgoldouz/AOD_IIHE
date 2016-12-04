@@ -101,6 +101,8 @@ int IIHEModuleTrigger::addBranches(){
   int result = 0 ;
   IIHEAnalysis* analysis = parent_ ;
   for(unsigned int i=0 ; i<HLTriggers_.size() ; i++){
+    if (std::find(savedHLTriggers_.begin(), savedHLTriggers_.end(), HLTriggers_.at(i)->name().substr(0, HLTriggers_.at(i)->name().find("_v"))) != savedHLTriggers_.end()) continue;
+    savedHLTriggers_.push_back(HLTriggers_.at(i)->name().substr(0, HLTriggers_.at(i)->name().find("_v"))); 
     result += HLTriggers_.at(i)->createBranches(analysis) ;
   }
   return result ;
