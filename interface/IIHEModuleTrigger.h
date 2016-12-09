@@ -32,6 +32,7 @@ private:
   bool addHLTrigger(HLTrigger*) ;
   std::vector<L1Trigger*> L1Triggers_ ;
   std::vector<HLTrigger*> HLTriggers_ ;
+  void clearHLTrigger(){HLTriggers_.clear();} ;
  
   HLTConfigProvider hltConfig_ ;
 //  HLTPrescaleProvider hltPrescaleProvider_;

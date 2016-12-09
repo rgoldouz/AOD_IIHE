@@ -70,7 +70,7 @@ process.GlobalTag.globaltag = globalTag
 print "Global Tag is ", process.GlobalTag.globaltag
 
 process.options = cms.untracked.PSet( SkipEvent = cms.untracked.vstring('ProductNotFound') )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10000) )
 
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
@@ -90,7 +90,22 @@ if options.DataProcessing == "data":
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring())
 
-process.source.fileNames.append( 'file:l.root' )
+process.source.fileNames.append( 'file:pickevents_11.root' )
+process.source.fileNames.append( 'file:pickevents_2.root' )
+process.source.fileNames.append( 'file:pickevents_13.root' )
+process.source.fileNames.append( 'file:copy1_numEvent2.root' )
+process.source.fileNames.append( 'file:pickevents_4.root' )
+process.source.fileNames.append( 'file:pickevents_9.root' )
+process.source.fileNames.append( 'file:pickevents_6.root' )
+process.source.fileNames.append( 'file:pickevents_3.root' )
+process.source.fileNames.append( 'file:pickevents_8.root' )
+process.source.fileNames.append( 'file:copy2_numEvent2.root' )
+process.source.fileNames.append( 'file:pickevents_12.root' )
+process.source.fileNames.append( 'file:pickevents_1.root' )
+process.source.fileNames.append( 'file:pickevents_5.root' )
+process.source.fileNames.append( 'file:copy3_numEvent2.root' )
+process.source.fileNames.append( 'file:pickevents_7.root' )
+process.source.fileNames.append( 'file:pickevents_10.root' )
 #process.source.fileNames.append( 'file:rerecodata.root' )
 #process.source.fileNames.append( 'file:data.root' )
 #process.source.fileNames.append( 'file:ZToEE_NNPDF30_13TeV-powheg_M_2300_3500.root' )

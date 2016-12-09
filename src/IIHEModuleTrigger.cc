@@ -149,6 +149,7 @@ void IIHEModuleTrigger::beginRun(edm::Run const& iRun, edm::EventSetup const& iS
   if(hltConfig_.init(iRun, iSetup, trigEventTag_.process(), changed)){
     // ...and that we've noticed that things have changed...
     if(changed){
+      clearHLTrigger();
       // This is debug information.  It's very verbose, so I commented it out.
       if(false) hltConfig_.dump("Modules") ;
       

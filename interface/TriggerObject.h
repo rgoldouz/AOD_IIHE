@@ -55,7 +55,8 @@ public:
   ~L1Trigger() ;
   void reset() ;
   
-  std::string       name(){ return       name_ ; }
+  std::string       name(){  return       name_ ; }
+  bool acc(){return accept_;}
   std::string branchName(){ return branchName_ ; }
   int setFilterIndex(edm::Handle<trigger::TriggerEvent>, edm::InputTag) ;
   bool matchElectron(edm::Handle<trigger::TriggerEvent>, reco::GsfElectron*) ;
@@ -121,6 +122,7 @@ public:
   void store(IIHEAnalysis*) ;
   
   std::string name(){ return name_ ; }
+  bool acc(){return accept_;}
   void setIndex(int index){ index_ = index ; }
   int index(){ return index_ ; }
   
