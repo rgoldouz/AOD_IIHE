@@ -45,6 +45,7 @@ private:
 
   edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
   edm::EDGetTokenT<trigger::TriggerEvent> trigEvent_;
+
   
   bool isSingleElectonTriggerName(std::string) ;
   bool isDoubleElectonTriggerName(std::string) ;

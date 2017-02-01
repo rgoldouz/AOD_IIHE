@@ -123,10 +123,15 @@ private:
   IIHEMuonTrackWrapper* globalTrackWrapper_ ;
   IIHEMuonTrackWrapper* outerTrackWrapper_  ;
   IIHEMuonTrackWrapper* innerTrackWrapper_  ;
-  
+  IIHEMuonTrackWrapper* improvedMuonBestTrackWrapper_  ;
+  edm::Handle<reco::VertexCollection > pvCollection_ ;
+  edm::EDGetTokenT<reco::VertexCollection> vtxToken_;
+  edm::EDGetTokenT<std::vector<bool>> badMuons_;
+  edm::InputTag           primaryVertexLabel_ ;
   bool storeGlobalTrackMuons_ ;
   bool storeStandAloneMuons_  ;
   bool storeInnerTrackMuons_  ;
+  bool storeImprovedMuonBestTrackMuons_  ;
   float ptThreshold_ ;
 };
 #endif

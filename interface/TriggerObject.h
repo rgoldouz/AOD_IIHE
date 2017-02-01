@@ -22,8 +22,10 @@ class TriggerFilter{
   std::string triggerName_ ;
   std::vector<float> etaValues_ ;
   std::vector<float> phiValues_ ;
+  std::vector<float> etValues_ ;
   std::string etaBranchName_ ;
   std::string phiBranchName_ ;
+  std::string etBranchName_ ;
   int index_ ;
 public:
   TriggerFilter(std::string, std::string);
@@ -72,10 +74,12 @@ private:
   int  prescale_ ;
   int  index_ ;
   int  searchStatus_ ;
+  bool saveFilters_; 
   
   std::vector<float> etaValues_ ;
   std::vector<float> phiValues_ ;
-  
+  std::vector<float> etValues_ ; 
+ 
   int nSC_     ;
   int nPh_     ;
   int nEl_     ;
@@ -95,10 +99,10 @@ private:
   std::string prescaleBranchName_ ;
   std::string etaBranchName_      ;
   std::string phiBranchName_      ;
-  
+  std::string etBranchName_ ; 
+ 
   enum searchStatuses{ notSearchedFor , searchedForAndFound , searchedForAndNotFound } ;
   
-  int nSubstringInString(const std::string&, const std::string&) ;
   int nMuonsInTriggerName() ;
   int nSuperclustersInTriggerName() ;
   int nPhotonsInTriggerName() ;
@@ -116,7 +120,7 @@ public:
   void reset() ;
   int createBranches(IIHEAnalysis*) ;
   bool  beginRun(HLTConfigProvider const&) ;
-  
+  int nSubstringInString(const std::string&, const std::string&) ;  
   int findIndex(HLTConfigProvider const&) ;
   int status(const edm::Event&, edm::EventSetup const&, HLTConfigProvider const&, int, Handle<TriggerResults> const&, edm::Handle<trigger::TriggerEvent>, edm::InputTag, IIHEAnalysis*) ;
   void store(IIHEAnalysis*) ;
@@ -145,7 +149,8 @@ public:
   bool isOnlySingleElectronSingleMuon(){ return (nTypes_==1*pow(10,(int)kElectron)+1*pow(10,(int)kMuon)) ; }
   bool isOnlySingleElectronDoubleMuon(){ return (nTypes_==1*pow(10,(int)kElectron)+2*pow(10,(int)kMuon)) ; }
   bool isOnlyDoubleElectronSingleMuon(){ return (nTypes_==2*pow(10,(int)kElectron)+1*pow(10,(int)kMuon)) ; }
-  
+
+  void saveFilters(){saveFilters_=1 ;}   
   std::vector<TriggerFilter*> filters_ ;
 };
 

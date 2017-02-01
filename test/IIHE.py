@@ -61,16 +61,19 @@ if options.DataProcessing == "promptdata":
 
 process = cms.Process("IIHEAnalysis")
 
-process.load("Configuration.StandardSequences.MagneticField_cff")
-process.load("Configuration.Geometry.GeometryIdeal_cff")
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
+process.load('Configuration.StandardSequences.MagneticField_cff')
 process.load("Configuration.EventContent.EventContent_cff")
-process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff")
+from Configuration.AlCa.GlobalTag import GlobalTag
+from Configuration.AlCa.autoCond import autoCond
+process.GlobalTag = GlobalTag(process.GlobalTag, globalTag, '') #
 
 process.GlobalTag.globaltag = globalTag
 print "Global Tag is ", process.GlobalTag.globaltag
 
 process.options = cms.untracked.PSet( SkipEvent = cms.untracked.vstring('ProductNotFound') )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
@@ -90,22 +93,7 @@ if options.DataProcessing == "data":
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring())
 
-process.source.fileNames.append( 'file:pickevents_11.root' )
-process.source.fileNames.append( 'file:pickevents_2.root' )
-process.source.fileNames.append( 'file:pickevents_13.root' )
-process.source.fileNames.append( 'file:copy1_numEvent2.root' )
-process.source.fileNames.append( 'file:pickevents_4.root' )
-process.source.fileNames.append( 'file:pickevents_9.root' )
-process.source.fileNames.append( 'file:pickevents_6.root' )
-process.source.fileNames.append( 'file:pickevents_3.root' )
-process.source.fileNames.append( 'file:pickevents_8.root' )
-process.source.fileNames.append( 'file:copy2_numEvent2.root' )
-process.source.fileNames.append( 'file:pickevents_12.root' )
-process.source.fileNames.append( 'file:pickevents_1.root' )
-process.source.fileNames.append( 'file:pickevents_5.root' )
-process.source.fileNames.append( 'file:copy3_numEvent2.root' )
-process.source.fileNames.append( 'file:pickevents_7.root' )
-process.source.fileNames.append( 'file:pickevents_10.root' )
+process.source.fileNames.append( 'file:AODdata.root' )
 #process.source.fileNames.append( 'file:rerecodata.root' )
 #process.source.fileNames.append( 'file:data.root' )
 #process.source.fileNames.append( 'file:ZToEE_NNPDF30_13TeV-powheg_M_2300_3500.root' )
@@ -153,16 +141,9 @@ process.IIHEAnalysis.triggers = cms.untracked.string(triggers)
 process.IIHEAnalysis.globalTag = cms.string(globalTag)
 
 
-#Track isolation correction
-process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
-process.load("PhysicsTools.PatAlgos.slimming.packedCandidatesForTrkIso_cfi")
-process.load("PhysicsTools.PatAlgos.slimming.primaryVertexAssociation_cfi")
-process.load("RecoEgamma.ElectronIdentification.heepIdVarValueMapProducer_cfi")
-
-
 # Collections.
-process.IIHEAnalysis.photonCollection    = cms.InputTag('photons'        )
-process.IIHEAnalysis.electronCollection  = cms.InputTag('gedGsfElectrons')
+process.IIHEAnalysis.photonCollection    = cms.InputTag('gedPhotonsGSFixed'        )
+process.IIHEAnalysis.electronCollection  = cms.InputTag('gedGsfElectronsGSFixed')
 #process.IIHEAnalysis.electronCollection  = cms.InputTag('CorrectedEle')
 process.IIHEAnalysis.muonCollection      = cms.InputTag('muons'          )
 process.IIHEAnalysis.superClusterCollection = cms.InputTag('correctedHybridSuperClusters')
@@ -234,7 +215,7 @@ process.IIHEAnalysis.includeTracksModule         = cms.untracked.bool(False)
 process.IIHEAnalysis.includeMCTruthModule         = cms.untracked.bool(('mc' in options.DataProcessing))
 #process.IIHEAnalysis.includeMCTruthModule         = cms.untracked.bool(False)
 #change it to true if you want to save all events
-#process.IIHEAnalysis.includeAutoAcceptEventModule= cms.untracked.bool(False)
+process.IIHEAnalysis.includeAutoAcceptEventModule= cms.untracked.bool(False)
 
 process.IIHEAnalysis.debug = cms.bool(False)
 
@@ -248,11 +229,45 @@ process.IIHEAnalysis.debug = cms.bool(False)
 #    fileName = cms.untracked.string('test.root')
 #)
 
+#Gain switch problem solving
+process.load("RecoLuminosity.LumiProducer.bunchSpacingProducer_cfi")
+process.bunchSpacingProducerSequence = cms.Sequence(process.bunchSpacingProducer)
+process.load("RecoEgamma.EgammaTools.egammaGainSwitchFix_cff")
+process.load("RecoParticleFlow.PFProducer.pfGSFixLinkerForPAT_cff")
+process.load("RecoEgamma.EgammaIsolationAlgos.pfClusterIsolationRemapForPAT_cff")
+process.load("RecoEgamma.ElectronIdentification.idExternalRemapForPAT_cff")
+
+
+#HEEP trkiso correction
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import switchOnVIDElectronIdProducer
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import setupVIDElectronSelection
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import setupAllVIDIdsInModule
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import DataFormat
+dataFormat = DataFormat.AOD
+switchOnVIDElectronIdProducer(process, dataFormat)
+# define which IDs we want to produce
+my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.heepElectronID_HEEPV70_cff']
+
+#add them to the VID producer
+for idmod in my_id_modules:
+    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
+
+
+#add bad muon infor from MET filter
+process.load('RecoMET.METFilters.badGlobalMuonTaggersAOD_cff')
+process.badGlobalMuonTagger.taggingMode = True
+process.badGlobalMuonTagger.selectClones = True
+process.IIHEAnalysis.badMuonLabel =  cms.InputTag("badGlobalMuonTagger", "badMuon")
+
 process.p1 = cms.Path(
-#    process.CorrectedEle  *
-    process.primaryVertexAssociation   *
-    process.packedCandsForTkIso    *
-    process.heepIDVarValueMaps    *
+    process.bunchSpacingProducerSequence * 
+    process.egammaGainSwitchFixSequence *
+    process.particleFlowLinks *
+    process.pfClusterIsolationSequence *
+    process.ElectronIDExternalProducerRemapSequence *
+    process.PhotonIDExternalProducerRemapSequence *
+    process.egmGsfElectronIDSequence *    
+    process.badGlobalMuonTagger  *
     process.IIHEAnalysis 
 )
 

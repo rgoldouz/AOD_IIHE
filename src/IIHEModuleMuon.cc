@@ -8,6 +8,9 @@
 #include "DataFormats/HLTReco/interface/TriggerTypeDefs.h"
 #include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/MuonReco/interface/MuonCocktails.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
+
+
 
 #include <iostream>
 #include <TMath.h>
@@ -188,12 +191,19 @@ IIHEModuleMuon::IIHEModuleMuon(const edm::ParameterSet& iConfig, edm::ConsumesCo
   IIHEModule(iConfig),
   globalTrackWrapper_(new IIHEMuonTrackWrapper("mu_gt")),
   outerTrackWrapper_ (new IIHEMuonTrackWrapper("mu_ot")),
-  innerTrackWrapper_ (new IIHEMuonTrackWrapper("mu_it")){
+  innerTrackWrapper_ (new IIHEMuonTrackWrapper("mu_it")),
+  improvedMuonBestTrackWrapper_ (new IIHEMuonTrackWrapper("mu_ibt")){
   
   storeGlobalTrackMuons_ = iConfig.getUntrackedParameter<bool>("storeGlobalTrackMuons", true ) ;
   storeStandAloneMuons_  = iConfig.getUntrackedParameter<bool>("storeStandAloneMuons" , true ) ;
   storeInnerTrackMuons_  = iConfig.getUntrackedParameter<bool>("storeInnerTrackMuons" , true ) ;
+  storeImprovedMuonBestTrackMuons_  = iConfig.getUntrackedParameter<bool>("storeImprovedMuonBestTrackMuons" , true ) ;
   ptThreshold_           = iConfig.getUntrackedParameter<double>("muons_pTThreshold"  ,  0.0 ) ;
+
+  primaryVertexLabel_          = iConfig.getParameter<edm::InputTag>("primaryVertex") ;
+  vtxToken_ = iC.consumes<reco::VertexCollection>(primaryVertexLabel_);
+  badMuons_ = iC.consumes<std::vector<bool>> (iConfig.getParameter<edm::InputTag>("badMuonLabel"));
+
 }
 IIHEModuleMuon::~IIHEModuleMuon(){}
 
@@ -205,59 +215,35 @@ void IIHEModuleMuon::beginJob(){
   addBranch("mu_gt_n") ;
   addBranch("mu_ot_n") ;
   addBranch("mu_it_n") ;
-  
+  addBranch("mu_ibt_n") ;
   IIHEAnalysis* analysis = parent_ ;
   if(storeGlobalTrackMuons_) globalTrackWrapper_->addBranches(analysis) ;
   if(storeStandAloneMuons_ )  outerTrackWrapper_->addBranches(analysis) ;
   if(storeInnerTrackMuons_ )  innerTrackWrapper_->addBranches(analysis) ;
+  if(storeImprovedMuonBestTrackMuons_ )  improvedMuonBestTrackWrapper_->addBranches(analysis) ;
   
   // Muon type block
   setBranchType(kVectorBool) ;
+  addBranch("mu_isBad") ;
   addBranch("mu_isGlobalMuon"      ) ;
   addBranch("mu_isStandAloneMuon"  ) ;
   addBranch("mu_isTrackerMuon"     ) ;
   addBranch("mu_isPFMuon"          ) ;
   addBranch("mu_isPFIsolationValid") ;
+  addBranch("mu_isTightMuon"     ) ;
+  addBranch("mu_isLooseMuon"     ) ;
+  addBranch("mu_isSoftMuon"     ) ;
+  addBranch("mu_isHighPtMuon"     ) ;
+
   
   // Hits block
   setBranchType(kVectorInt) ;
   addBranch("mu_numberOfMatchedStations" ) ;
   addBranch("mu_numberOfValidPixelHits"  ) ;
-  addBranch("mu_numberOfValidTrackerHits") ;
+  addBranch("mu_trackerLayersWithMeasurement") ;
   addBranch("mu_numberOfValidMuonHits"   ) ;
-/*CHOOSE_RELEASE_START CMSSW_6_2_0_SLHC23_patch1
-  addBranch("mu_numberOfValidGEMHits"    ) ;
-CHOOSE_RELEASE_END CMSSW_6_2_0_SLHC23_patch1*/
-/*CHOOSE_RELEASE_START DEFAULT
-CHOOSE_RELEASE_END DEFAULT*/
-  
-  // TeV optimized values
-  addBranch("mu_tevOptimized_charge", kVectorInt) ;
-  setBranchType(kVectorFloat) ;
-  addBranch("mu_tevOptimized_pt"   ) ;
-  addBranch("mu_tevOptimized_eta"  ) ;
-  addBranch("mu_tevOptimized_phi"  ) ;
-  addBranch("mu_tevOptimized_theta") ;
-  addBranch("mu_tevOptimized_px"   ) ;
-  addBranch("mu_tevOptimized_py"   ) ;
-  addBranch("mu_tevOptimized_pz"   ) ;
-  
-  addBranch("mu_tevOptimized_d0"           ) ;
-  addBranch("mu_tevOptimized_dz"           ) ;
-  addBranch("mu_tevOptimized_dz_beamSpot"  ) ;
-  addBranch("mu_tevOptimized_dz_firstPVtx" ) ;
-  addBranch("mu_tevOptimized_dxy"          ) ;
-  addBranch("mu_tevOptimized_dxy_beamSpot" ) ;
-  addBranch("mu_tevOptimized_dxy_firstPVtx") ;
-  
-  addBranch("mu_tevOptimized_ptError"   ) ;
-  addBranch("mu_tevOptimized_etaError"  ) ;
-  addBranch("mu_tevOptimized_phiError"  ) ;
-  addBranch("mu_tevOptimized_thetaError") ;
-  addBranch("mu_tevOptimized_d0Error"   ) ;
-  addBranch("mu_tevOptimized_dzError"   ) ;
-  addBranch("mu_tevOptimized_dxyError"  ) ;
-  
+  addBranch("mu_pixelLayersWithMeasurement") ;
+
   // Isolation block
   setBranchType(kVectorFloat) ;
   addBranch("mu_isolationR03_sumPt"        ) ;
@@ -288,7 +274,6 @@ CHOOSE_RELEASE_END DEFAULT*/
   addBranch("mu_pfIsolationR04_sumPhotonEtHighThreshold"       ) ;
   addBranch("mu_pfIsolationR04_sumPUPt"                        ) ;
   
-//CHOOSE_RELEASE_START DEFAULT CMSSW_7_4_4 CMSSW_7_0_6_patch1 CMSSW_7_3_0 CMSSW_7_2_0 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSSW_7_6_3 
   addBranch("mu_pfMeanDRIsoProfileR03_sumChargedHadronPt"             ) ;
   addBranch("mu_pfMeanDRIsoProfileR03_sumChargedParticlePt"           ) ;
   addBranch("mu_pfMeanDRIsoProfileR03_sumPhotonEt"                    ) ;
@@ -306,24 +291,26 @@ CHOOSE_RELEASE_END DEFAULT*/
   addBranch("mu_mc_bestDR", kVectorFloat) ;
   addBranch("mu_mc_index" , kVectorInt  ) ;
   addBranch("mu_mc_ERatio", kVectorFloat) ;
-//CHOOSE_RELEASE_END DEFAULT CMSSW_7_4_4 CMSSW_7_0_6_patch1 CMSSW_7_3_0 CMSSW_7_2_0 CMSSW_6_2_5 CMSSW_6_2_0_SLHC23_patch1 CMSSW_7_6_3
-/*CHOOSE_RELEASE_START  CMSSW_5_3_11
-CHOOSE_RELEASE_END CMSSW_5_3_11*/
 }
 
 // ------------ method called to for each event  ------------
 void IIHEModuleMuon::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup){
+
+  edm::Handle<std::vector<bool>> badMuonHandle_;
+  iEvent.getByToken(badMuons_,badMuonHandle_);
+
+  iEvent.getByToken( vtxToken_ , pvCollection_);
+
   reco::MuonCollection muons = parent_->getMuonCollection() ;
-  
   math::XYZPoint* beamspot = parent_->getBeamspot() ;
   math::XYZPoint* firstPrimaryVertex = parent_->getFirstPrimaryVertex() ;
   
   store("mu_n", (unsigned int)(muons.size())) ;
-  
-  // Muons come with three tracks:
+  // Muons come with four tracks:
   //   Standalone track.  This is made from the outer detector
   //   Inner track.  This is made from the tracking system
   //   Global track.  This is made from a combination of the inner and outer tracks.
+  //   muonBestTrack. This is the best reconstruction of the muon track parameters for high-pt muons
   // So we need to be a little careful when we get the variables.
   
   IIHEAnalysis* analysis = parent_ ;
@@ -331,10 +318,12 @@ void IIHEModuleMuon::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   unsigned int mu_gt_n = 0 ;
   unsigned int mu_ot_n = 0 ;
   unsigned int mu_it_n = 0 ;
+  unsigned int mu_ibt_n = 0 ;
   int mu_n_saved = 0 ;
-  
+  int mu_bad = -1 ; 
 //  for(reco::MuonCollection::const_iterator muIt = muons.begin(); muIt != muons.end(); ++muIt){
   for(vector<reco::Muon>::const_iterator muIt = muons.begin() ; muIt != muons.end() ; ++muIt){
+    mu_bad++;
     bool isGlobalMuon     = muIt->isGlobalMuon()     ;
     bool isStandAloneMuon = muIt->isStandAloneMuon() ;
     bool isTrackerMuon    = muIt->isTrackerMuon()    ;
@@ -345,22 +334,30 @@ void IIHEModuleMuon::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if(isStandAloneMuon && storeStandAloneMuons_ ) storeThisMuon = true ;
     if(isTrackerMuon    && storeInnerTrackMuons_ ) storeThisMuon = true ;
     if(storeThisMuon==false) continue ;
-    
+ 
+    store("mu_isBad" , (*badMuonHandle_).at(mu_bad) ) ;   
     store("mu_isGlobalMuon"      , isGlobalMuon              ) ;
     store("mu_isStandAloneMuon"  , isStandAloneMuon          ) ;
     store("mu_isTrackerMuon"     , isTrackerMuon             ) ;
     store("mu_isPFMuon"          , muIt->isPFMuon()          ) ;
     store("mu_isPFIsolationValid", muIt->isPFIsolationValid()) ;
-    
+   
+    store("mu_isTightMuon" , muon::isTightMuon(*muIt,*pvCollection_->begin())    ) ;
+    store("mu_isLooseMuon" , muon::isLooseMuon(*muIt)    ) ;
+    store("mu_isSoftMuon"  , muon::isSoftMuon(*muIt,*pvCollection_->begin())  ) ;
+    store("mu_isHighPtMuon", muon::isHighPtMuon(*muIt,*pvCollection_->begin())    ) ;
+
     int numberOfMatchStations    = 0 ;
     int numberOfValidPixelHits   = 0 ;
-    int numberOfValidTrackerHits = 0 ;
+    int trackerLayersWithMeasurement = 0 ;
+    int pixelLayersWithMeasurement = 0;
     int numberOfValidMuonHits    = 0 ;
     
     numberOfMatchStations = muIt->numberOfMatchedStations() ;
     if(isTrackerMuon){
       numberOfValidPixelHits   = muIt->innerTrack()->hitPattern().numberOfValidPixelHits() ;
-      numberOfValidTrackerHits = muIt->innerTrack()->hitPattern().trackerLayersWithMeasurement() ;
+      trackerLayersWithMeasurement = muIt->innerTrack()->hitPattern().trackerLayersWithMeasurement() ;
+      pixelLayersWithMeasurement = muIt->innerTrack()->hitPattern().pixelLayersWithMeasurement();
     }
     
     if(isGlobalMuon){
@@ -369,26 +366,19 @@ void IIHEModuleMuon::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     
     store("mu_numberOfMatchedStations" , numberOfMatchStations   ) ;
     store("mu_numberOfValidPixelHits"  , numberOfValidPixelHits  ) ;
-    store("mu_numberOfValidTrackerHits", numberOfValidTrackerHits) ;
+    store("mu_trackerLayersWithMeasurement", trackerLayersWithMeasurement) ;
+    store("mu_pixelLayersWithMeasurement", pixelLayersWithMeasurement);
     store("mu_numberOfValidMuonHits"   , numberOfValidMuonHits   ) ;
-    
-/*CHOOSE_RELEASE_START CMSSW_6_2_0_SLHC23_patch1
-    int numberOfValidGEMHits     = 0 ;
-    if(isStandAloneMuon){
-      numberOfValidGEMHits = muIt->standAloneMuon()->hitPattern().numberOfValidMuonGEMHits() ;
-    }
-    store("mu_numberOfValidGEMHits"    , numberOfValidGEMHits    ) ;
-CHOOSE_RELEASE_END CMSSW_6_2_0_SLHC23_patch1*/
-/*CHOOSE_RELEASE_START DEFAULT
-CHOOSE_RELEASE_END DEFAULT*/
     
     globalTrackWrapper_->reset() ;
     outerTrackWrapper_ ->reset() ;
     innerTrackWrapper_ ->reset() ;
+    improvedMuonBestTrackWrapper_ ->reset() ;
     
     reco::TrackRef globalTrack = muIt->globalTrack() ;
     reco::TrackRef  outerTrack = muIt->outerTrack()  ;
     reco::TrackRef  innerTrack = muIt->innerTrack()  ;
+    reco::TrackRef  improvedMuonBestTrack = muIt->tunePMuonBestTrack();
     
     bool saveMuon = false ;
     
@@ -404,7 +394,7 @@ CHOOSE_RELEASE_END DEFAULT*/
     }
     if(storeGlobalTrackMuons_){
       if(globalTrack.isNonnull() && muIt->    isGlobalMuon()){
-        if(globalTrack->pt() > ptThreshold_) saveMuon = true ;
+        if(globalTrack->pt() > ptThreshold_ || improvedMuonBestTrack->pt() > ptThreshold_) saveMuon = true ;
       }
     }
     
@@ -430,67 +420,16 @@ CHOOSE_RELEASE_END DEFAULT*/
         globalTrackWrapper_->store(analysis) ;
         mu_gt_n++ ;
       }
+      if(storeImprovedMuonBestTrackMuons_){
+        if( globalTrack.isNonnull() && muIt->    isGlobalMuon()){
+          improvedMuonBestTrackWrapper_->fill( improvedMuonBestTrack, beamspot, firstPrimaryVertex) ;
+        }
+        improvedMuonBestTrackWrapper_ ->store(analysis) ;
+        mu_ibt_n++ ;
+      }
       mu_n_saved++ ;
     }
    
-    // get TeV optimized track
-    bool makeTevOptimizedTrack = muIt->isGlobalMuon() ;
-    if(makeTevOptimizedTrack){
-
-//      reco::Muon::MuonTrackTypePair tevOptimizedTrack = muon::tevOptimized(*muIt, 200, 17., 40., 0.25) ;
-//      reco::Muon::MuonTrackTypePair tevOptimizedTrack = muon::tevOptimized(muIt->globalTrack(),muIt->innerTrack(),muIt->tpfmsTrack(),muIt->pickyTrack(),muIt->dytTrack(), 200, 17., 40., 0.25) ;
-/*
-      store("mu_tevOptimized_charge"       , tevOptimizedTrack.first->charge()                ) ;
-      store("mu_tevOptimized_pt"           , tevOptimizedTrack.first->pt()                    ) ;
-      store("mu_tevOptimized_eta"          , tevOptimizedTrack.first->eta()                   ) ;
-      store("mu_tevOptimized_phi"          , tevOptimizedTrack.first->phi()                   ) ;
-      store("mu_tevOptimized_theta"        , tevOptimizedTrack.first->theta()                 ) ;
-      store("mu_tevOptimized_px"           , tevOptimizedTrack.first->px()                    ) ;
-      store("mu_tevOptimized_py"           , tevOptimizedTrack.first->py()                    ) ;
-      store("mu_tevOptimized_pz"           , tevOptimizedTrack.first->pz()                    ) ;
-      store("mu_tevOptimized_d0"           , tevOptimizedTrack.first->d0()                    ) ;
-      store("mu_tevOptimized_dz"           , tevOptimizedTrack.first->dz()                    ) ;
-      store("mu_tevOptimized_dz_beamSpot"  , tevOptimizedTrack.first->dz(*beamspot)           ) ;
-      store("mu_tevOptimized_dz_firstPVtx" , tevOptimizedTrack.first->dz(*firstPrimaryVertex) ) ;
-      store("mu_tevOptimized_dxy"          , tevOptimizedTrack.first->dxy()                   ) ;
-      store("mu_tevOptimized_dxy_beamSpot" , tevOptimizedTrack.first->dxy(*beamspot)          ) ;
-      store("mu_tevOptimized_dxy_firstPVtx", tevOptimizedTrack.first->dxy(*firstPrimaryVertex)) ;
-      store("mu_tevOptimized_ptError"      , tevOptimizedTrack.first->ptError()               ) ;
-      store("mu_tevOptimized_etaError"     , tevOptimizedTrack.first->etaError()              ) ;
-      store("mu_tevOptimized_phiError"     , tevOptimizedTrack.first->phiError()              ) ;
-      store("mu_tevOptimized_thetaError"   , tevOptimizedTrack.first->thetaError()            ) ;
-      store("mu_tevOptimized_d0Error"      , tevOptimizedTrack.first->d0Error()               ) ;
-      store("mu_tevOptimized_dzError"      , tevOptimizedTrack.first->dzError()               ) ;
-      store("mu_tevOptimized_dxyError"     , tevOptimizedTrack.first->dxyError()              ) ;
-*/
-    }
-    else{
-      int   defValueInt   = -999.0 ;
-      float defValueFloat = -999.0 ;
-      store("mu_tevOptimized_charge"       , defValueInt  ) ;
-      store("mu_tevOptimized_pt"           , defValueFloat) ;
-      store("mu_tevOptimized_eta"          , defValueFloat) ;
-      store("mu_tevOptimized_phi"          , defValueFloat) ;
-      store("mu_tevOptimized_theta"        , defValueFloat) ;
-      store("mu_tevOptimized_px"           , defValueFloat) ;
-      store("mu_tevOptimized_py"           , defValueFloat) ;
-      store("mu_tevOptimized_pz"           , defValueFloat) ;
-      store("mu_tevOptimized_d0"           , defValueFloat) ;
-      store("mu_tevOptimized_dz"           , defValueFloat) ;
-      store("mu_tevOptimized_dz_beamSpot"  , defValueFloat) ;
-      store("mu_tevOptimized_dz_firstPVtx" , defValueFloat) ;
-      store("mu_tevOptimized_dxy"          , defValueFloat) ;
-      store("mu_tevOptimized_dxy_beamSpot" , defValueFloat) ;
-      store("mu_tevOptimized_dxy_firstPVtx", defValueFloat) ;
-      store("mu_tevOptimized_ptError"      , defValueFloat) ;
-      store("mu_tevOptimized_etaError"     , defValueFloat) ;
-      store("mu_tevOptimized_phiError"     , defValueFloat) ;
-      store("mu_tevOptimized_thetaError"   , defValueFloat) ;
-      store("mu_tevOptimized_d0Error"      , defValueFloat) ;
-      store("mu_tevOptimized_dzError"      , defValueFloat) ;
-      store("mu_tevOptimized_dxyError"     , defValueFloat) ;
-    }
-    
     // Isolation variables
     const MuonIsolation   iso30       = muIt->isolationR03() ;
     const MuonIsolation   iso50       = muIt->isolationR05() ;
@@ -564,6 +503,7 @@ CHOOSE_RELEASE_END CMSSW_5_3_11*/
   store("mu_gt_n", mu_gt_n) ;
   store("mu_ot_n", mu_ot_n) ;
   store("mu_it_n", mu_it_n) ;
+  store("mu_ibt_n", mu_ibt_n) ;
 }
 
 void IIHEModuleMuon::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup){}

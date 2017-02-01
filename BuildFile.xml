@@ -45,14 +45,12 @@
 <use   name="RecoEcal/EgammaCoreTools"/>
 <use   name="RecoEgamma/EgammaIsolationAlgos"/>
 <use   name="RecoEgamma/EgammaElectronAlgos"/>
-<use   name="RecoEcal/EgammaCoreTools"/>
 <use   name="CommonTools/UtilAlgos"/>
 <use   name="PhysicsTools/IsolationAlgos"/>
 <use   name="DataFormats/Common"/>
 <use   name="hepmc"/>
 <use   name="root"/>
 <use   name="DataFormats/Luminosity"/>
-<use   name="UserCode/IIHETree"/>
 
 <flags   EDM_PLUGIN="1"/>
 

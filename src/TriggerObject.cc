@@ -12,6 +12,7 @@ TriggerFilter::TriggerFilter(std::string name, std::string triggerName){
   // So far we only store eta and phi, but we can also all ET if we want to.
   etaBranchName_ = "trig_" + triggerName_.substr(0, triggerName_.find("_v")) + "_" + name_ + "_eta" ;
   phiBranchName_ = "trig_" + triggerName_.substr(0, triggerName_.find("_v")) + "_" + name_ + "_phi" ;
+  etBranchName_ = "trig_" + triggerName_.substr(0, triggerName_.find("_v")) + "_" + name_ + "_et" ;
 }
 int TriggerFilter::createBranches(IIHEAnalysis* analysis){
   // Try to add the branches, and return the number of added branches.
@@ -20,6 +21,7 @@ int TriggerFilter::createBranches(IIHEAnalysis* analysis){
   int result = 0 ;
   result += analysis->addBranch(etaBranchName_, kVectorFloat) ;
   result += analysis->addBranch(phiBranchName_, kVectorFloat) ;
+  result += analysis->addBranch(etBranchName_, kVectorFloat) ;
   return result ;
 }
 int TriggerFilter::setIndex(edm::Handle<trigger::TriggerEvent> trigEvent, edm::InputTag trigEventTag){
@@ -50,11 +52,12 @@ int TriggerFilter::setValues(edm::Handle<trigger::TriggerEvent> trigEvent, IIHEA
       // Push the values to the ntuple.
       analysis->store(etaBranchName_, obj.eta()) ;
       analysis->store(phiBranchName_, obj.phi()) ;
-      
+      analysis->store(etBranchName_, obj.et()) ;     
       // Store them in case we want to do some analysis with them.  (We don't, so we can
       // remove these lines.  It may be useful for debugging though.)
       etaValues_.push_back(obj.eta()) ;
       phiValues_.push_back(obj.phi()) ;
+      etValues_.push_back(obj.et()) ;
     }
     // Return success.
     return 0 ;
@@ -67,7 +70,8 @@ bool TriggerFilter::store(IIHEAnalysis* analysis){
   // There's no harm doing this though, it will just save things twice.
   bool etaSuccess = analysis->store(etaBranchName_, etaValues_) ;
   bool phiSuccess = analysis->store(phiBranchName_, phiValues_) ;
-  return (etaSuccess && phiSuccess) ;
+  bool etSuccess = analysis->store(etBranchName_, etValues_) ;
+  return (etaSuccess && phiSuccess && etSuccess) ;
 }
 
 // L1Trigger is not used in the main analysis.  It has coarse matching.  See the
@@ -141,7 +145,7 @@ HLTrigger::HLTrigger(std::string name, HLTConfigProvider hltConfig){
   
   // The index tells us how to find the trigger quickly for each event.
   index_ = -1 ;
-  
+  saveFilters_ = 0; 
   // This is set so that we do not attempt to use a trigger that has not been found in the
   // event.  (For example, if we create an HLTrigger with a typo somehow.)
   searchStatus_ = notSearchedFor ;
@@ -240,8 +244,8 @@ int HLTrigger::nElectronsInTriggerName(){
   return totalElectronCount ;
 }
 int HLTrigger::nMuonsInTriggerName(){
-  int singleMuonCount = nSubstringInString(name_, "Mu"      ) ;
-  int doubleMuonCount = nSubstringInString(name_, "DoubleMu") + nSubstringInString(name_, "DiMu") + nSubstringInString(name_, "Dimuon") ;
+  int singleMuonCount = nSubstringInString(name_, "Mu"      ) + nSubstringInString(name_, "muon") - nSubstringInString(name_, "Multi");
+  int doubleMuonCount = nSubstringInString(name_, "DoubleMu") + nSubstringInString(name_, "DiMu") + nSubstringInString(name_, "Dimuon")+ nSubstringInString(name_, "DoubleIsoMu") ;
   int tripleMuonCount = nSubstringInString(name_, "TripleMu") ;
   int totalMuonCount = 2*tripleMuonCount + 1*doubleMuonCount + singleMuonCount ;
   return totalMuonCount ;
@@ -302,16 +306,15 @@ int HLTrigger::status(const edm::Event& iEvent, const edm::EventSetup & iSetup, 
     
     // Now get the variables we care about.
     accept_   = triggerResults->accept(index_) ;
-//    prescale_ = 1;
-//    Prescale.prescaleValue (iEvent,iSetup,name_);
-//    int preScaleColumn = (Prescale.hltConfigProvider().inited()) ? Prescale.prescaleSet(iEvent,iSetup) : -1;
     prescale_ = hltConfig.prescaleValue(Prescale, name_);
- 
+
+    if (saveFilters_){ 
     // And finally loop over the filters.
-    for(unsigned i=0 ; i<filters_.size() ; ++i){
-      TriggerFilter* filter = filters_.at(i) ;
-      filter->setIndex(trigEvent, trigEventTag) ;
-      filter->setValues(trigEvent, analysis) ;
+      for(unsigned i=0 ; i<filters_.size() ; ++i){
+        TriggerFilter* filter = filters_.at(i) ;
+        filter->setIndex(trigEvent, trigEventTag) ;
+        filter->setValues(trigEvent, analysis) ;
+      }
     }
     // Return success!
     return 0 ;
@@ -332,10 +335,12 @@ int HLTrigger::createBranches(IIHEAnalysis* analysis){
   // Only report where we were successful, in case the TTree doesn't exist or something.
   result += analysis->addBranch(  acceptBranchName_, kInt) ;
   result += analysis->addBranch(prescaleBranchName_, kInt) ;
-  
+
+  if (saveFilters_){   
   // Now loop over the filters.
-  for(unsigned i=0 ; i<filters_.size() ; ++i){
-    result += filters_.at(i)->createBranches(analysis) ;
+    for(unsigned i=0 ; i<filters_.size() ; ++i){
+      result += filters_.at(i)->createBranches(analysis) ;
+    }
   }
   return result ;
 }

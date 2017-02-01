@@ -89,6 +89,7 @@ bool IIHEModuleTrigger::addHLTrigger(HLTrigger* hlt){
       return false ;
     }
   }
+   if(hlt->nSubstringInString(hlt->name(), "Ele27" ) || hlt->nSubstringInString(hlt->name(), "DoubleEle33" ) || hlt->nSubstringInString(hlt->name(), "Mu50" ) || hlt->nSubstringInString(hlt->name(), "Mu33_Ele33" )) hlt->saveFilters();
   HLTriggers_.push_back(hlt) ;
   return true ;
 }
